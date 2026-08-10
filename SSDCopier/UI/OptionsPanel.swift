@@ -8,7 +8,7 @@ struct OptionsPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("Opzioni", systemImage: "slider.horizontal.3")
+            Label(L("options.title"), systemImage: "slider.horizontal.3")
                 .font(.headline)
 
             verification
@@ -16,19 +16,19 @@ struct OptionsPanel: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 8) {
-                Toggle("Salta i file già presenti e identici (dimensione e data)", isOn: $options.skipIdenticalFiles)
-                Toggle("Escludi i file di sistema (.Spotlight-V100, .Trashes, …)", isOn: $options.excludeSystemFiles)
-                Toggle("Escludi i file .DS_Store", isOn: $options.excludeDSStore)
-                Toggle("Conserva permessi, date e attributi estesi", isOn: $options.preserveMetadata)
-                Toggle("Copia dentro una sottocartella con il nome dell'origine", isOn: $options.copyIntoNamedSubfolder)
-                Toggle("Continua anche se un file dà errore", isOn: $options.continueOnError)
+                Toggle(L("options.skipIdentical"), isOn: $options.skipIdenticalFiles)
+                Toggle(L("options.excludeSystem"), isOn: $options.excludeSystemFiles)
+                Toggle(L("options.excludeDSStore"), isOn: $options.excludeDSStore)
+                Toggle(L("options.preserveMetadata"), isOn: $options.preserveMetadata)
+                Toggle(L("options.subfolder"), isOn: $options.copyIntoNamedSubfolder)
+                Toggle(L("options.continueOnError"), isOn: $options.continueOnError)
             }
             .toggleStyle(.checkbox)
 
-            DisclosureGroup("Prestazioni", isExpanded: $showAdvanced) {
+            DisclosureGroup(L("options.performance"), isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("File copiati in parallelo")
+                        Text(L("options.workers"))
                         Spacer()
                         Stepper(value: $options.parallelWorkers, in: TransferOptions.workerRange) {
                             Text("\(options.parallelWorkers)")
@@ -36,13 +36,13 @@ struct OptionsPanel: View {
                                 .frame(minWidth: 20, alignment: .trailing)
                         }
                     }
-                    Text("2–4 è il valore giusto per due SSD. Valori alti aiutano solo con moltissimi file piccoli.")
+                    Text(L("options.workers.hint"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Picker("Blocco di lettura/scrittura", selection: $options.bufferSizeMB) {
+                    Picker(L("options.buffer"), selection: $options.bufferSizeMB) {
                         ForEach(TransferOptions.bufferRange, id: \.self) { size in
-                            Text("\(size) MB").tag(size)
+                            Text(L("options.buffer.unit", String(size))).tag(size)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -67,7 +67,7 @@ struct OptionsPanel: View {
 
     private var verification: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Picker("Verifica dopo la copia", selection: $options.verification) {
+            Picker(L("options.verification"), selection: $options.verification) {
                 ForEach(VerificationMode.allCases) { mode in
                     Text(mode.title).tag(mode)
                 }
@@ -79,14 +79,12 @@ struct OptionsPanel: View {
                 .foregroundStyle(.secondary)
 
             if options.verification == .checksum {
-                Label("Origine e destinazione vengono rilette bypassando la cache del sistema: è la verifica più affidabile, ma richiede circa lo stesso tempo della copia.",
-                      systemImage: "info.circle")
+                Label(L("options.checksum.note"), systemImage: "info.circle")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             if options.verification == .none {
-                Label("Senza verifica un errore del disco o del cavo può passare inosservato.",
-                      systemImage: "exclamationmark.triangle")
+                Label(L("options.none.warning"), systemImage: "exclamationmark.triangle")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }

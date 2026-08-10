@@ -25,8 +25,8 @@ struct VolumeInfo: Identifiable, Hashable, Sendable {
     }
 
     var capacityDescription: String {
-        guard totalCapacity > 0 else { return "Capacità sconosciuta" }
-        return "\(Fmt.bytes(availableCapacity)) liberi di \(Fmt.bytes(totalCapacity))"
+        guard totalCapacity > 0 else { return L("volume.unknownCapacity") }
+        return L("volume.capacity", Fmt.bytes(availableCapacity), Fmt.bytes(totalCapacity))
     }
 
     var icon: NSImage {

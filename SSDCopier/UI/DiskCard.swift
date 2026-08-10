@@ -8,8 +8,8 @@ struct DiskCard: View {
 
         var title: String {
             switch self {
-            case .source: "Origine"
-            case .destination: "Destinazione"
+            case .source: L("disk.source")
+            case .destination: L("disk.destination")
             }
         }
 
@@ -29,8 +29,8 @@ struct DiskCard: View {
 
         var emptyHint: String {
             switch self {
-            case .source: "Scegli il disco da copiare"
-            case .destination: "Scegli dove scrivere la copia"
+            case .source: L("disk.source.hint")
+            case .destination: L("disk.destination.hint")
             }
         }
     }
@@ -103,12 +103,12 @@ struct DiskCard: View {
 
             HStack(spacing: 8) {
                 if selection.volume?.isExternal == true {
-                    BadgeTag(text: "Esterno", symbol: "bolt.horizontal.circle")
+                    BadgeTag(text: L("disk.external"), symbol: "bolt.horizontal.circle")
                 }
                 if selection.volume?.isReadOnly == true {
-                    BadgeTag(text: "Sola lettura", symbol: "lock.fill", tint: .orange)
+                    BadgeTag(text: L("disk.readOnly"), symbol: "lock.fill", tint: .orange)
                 }
-                Button("Mostra nel Finder", action: onReveal)
+                Button(L("disk.revealInFinder"), action: onReveal)
                     .buttonStyle(.link)
                     .font(.caption)
             }
@@ -133,21 +133,21 @@ struct DiskCard: View {
             let internalVolumes = volumes.filter { !$0.isExternal }
 
             if external.isEmpty {
-                Text("Nessun disco esterno collegato")
+                Text(L("disk.noExternal"))
             } else {
-                Section("Dischi esterni") {
+                Section(L("disk.externalSection")) {
                     ForEach(external) { volume in
                         Button {
                             onChoose(volume)
                         } label: {
-                            Text("\(volume.name) — \(Fmt.bytes(volume.availableCapacity)) liberi")
+                            Text(L("disk.menuItem", volume.name, Fmt.bytes(volume.availableCapacity)))
                         }
                     }
                 }
             }
 
             if !internalVolumes.isEmpty {
-                Section("Altri volumi") {
+                Section(L("disk.otherSection")) {
                     ForEach(internalVolumes) { volume in
                         Button(volume.name) { onChoose(volume) }
                     }
@@ -155,9 +155,10 @@ struct DiskCard: View {
             }
 
             Divider()
-            Button("Scegli una cartella…") { onChoose(nil) }
+            Button(L("disk.chooseFolder")) { onChoose(nil) }
         } label: {
-            Label(selection == nil ? "Seleziona…" : "Cambia…", systemImage: "chevron.up.chevron.down")
+            Label(selection == nil ? L("disk.select") : L("disk.change"),
+                  systemImage: "chevron.up.chevron.down")
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -182,7 +183,7 @@ struct CapacityBar: View {
             }
             .frame(height: 7)
 
-            Text("\(Fmt.bytes(volume.usedCapacity)) usati · \(Fmt.bytes(volume.availableCapacity)) liberi")
+            Text(L("capacity.detail", Fmt.bytes(volume.usedCapacity), Fmt.bytes(volume.availableCapacity)))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

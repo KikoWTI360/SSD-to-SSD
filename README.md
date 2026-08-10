@@ -20,6 +20,7 @@ velocità e tempo rimanente calcolato**.
 | **Loader con ETA** | Anello di avanzamento, percentuale, velocità istantanea, tempo trascorso, file e byte processati, file corrente. Il tempo rimanente tiene conto sia della copia sia della verifica. |
 | **Controllo** | Pausa, ripresa e annullamento in qualsiasi momento; il Mac non va in stop durante il trasferimento. |
 | **Rapporto finale** | Riepilogo con file copiati/saltati/non riusciti, esiti della verifica ed elenco dei problemi. Esportabile in testo o copiabile negli appunti. |
+| **Italiano e inglese** | Menu con il mappamondo in alto a destra: Sistema, Italiano o English. Il cambio è immediato, senza riavviare l'app, e la scelta viene ricordata. |
 
 ## Come è calcolato il tempo rimanente
 
@@ -78,6 +79,41 @@ OUTPUT_DIR=~/Developer ./scripts/build.sh   # → ~/Developer/SSDCopier.app
 Lo script firma **ad-hoc**: l'app parte su quel Mac e riceve i suoi entitlements, quindi la
 sandbox si comporta come in produzione. Non è distribuibile ad altri: per quello serve una build
 firmata col tuo Team da Xcode, seguita dalla notarizzazione.
+
+## Lingue
+
+Tutte le stringhe stanno in `Core/Localization.swift`, in due dizionari `[String: String]`.
+Non sono file `.lproj`: la scelta serve a poter **cambiare lingua a caldo**, senza riavviare
+l'app e senza toccare il progetto Xcode. `Loc` non è isolato su un attore, così anche il motore
+di copia — che gira su thread GCD — può tradurre i propri messaggi d'errore.
+
+Il cambio lingua funziona perché `ContentView` legge `LanguageSetting.shared.selection` e applica
+`.id(language)`: SwiftUI ricostruisce l'intero albero invece di riusare le viste con le stringhe
+vecchie.
+
+Per aggiungere una stringa: metti la chiave in entrambi i dizionari e usala con `L("chiave")`,
+oppure `L("chiave", valore1, valore2)` per i segnaposto `%@`. Poi verifica:
+
+```bash
+python3 scripts/check_localization.py
+```
+
+Lo script controlla che ogni chiave usata esista in entrambe le lingue, che non ce ne siano di
+inutilizzate e che i segnaposto `%@` coincidano fra le due traduzioni.
+
+**Nota:** i messaggi dei problemi nel rapporto vengono tradotti nel momento in cui il motore li
+registra. Cambiando lingua a trasferimento concluso, un rapporto già prodotto resta nella lingua
+in cui è stato generato.
+
+## Icona
+
+```bash
+pip install Pillow
+python3 scripts/generate_icon.py
+```
+
+Disegna le dieci misure richieste da macOS renderizzando a 4096 px e riducendo con Lanczos.
+Per cambiarla, modifica colori e geometria in cima allo script e rilancialo.
 
 ### Rigenerare il progetto Xcode
 

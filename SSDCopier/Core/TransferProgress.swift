@@ -12,17 +12,7 @@ enum TransferPhase: String, Sendable {
     case failed
 
     var title: String {
-        switch self {
-        case .idle: "Pronto"
-        case .preparing: "Preparazione"
-        case .scanning: "Analisi origine"
-        case .copying: "Copia in corso"
-        case .verifying: "Verifica"
-        case .finalizing: "Finalizzazione"
-        case .completed: "Completato"
-        case .cancelled: "Annullato"
-        case .failed: "Interrotto"
-        }
+        L("phase.\(rawValue)")
     }
 
     /// Phases where a byte-accurate percentage is meaningless (we don't yet know the total).

@@ -190,7 +190,7 @@ def target_settings(config: str) -> dict[str, str]:
         "ENABLE_HARDENED_RUNTIME": "YES",
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
-        "INFOPLIST_KEY_CFBundleDisplayName": quote("Copia SSD"),
+        "INFOPLIST_KEY_CFBundleDisplayName": quote("SSD Copier"),
         "INFOPLIST_KEY_LSApplicationCategoryType": quote("public.app-category.utilities"),
         "INFOPLIST_KEY_NSHumanReadableCopyright": '""',
         # macOS 13+ chiede il consenso TCC per i volumi rimovibili: senza questa stringa

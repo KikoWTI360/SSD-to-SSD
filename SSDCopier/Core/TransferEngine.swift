@@ -95,7 +95,7 @@ final class TransferEngine: @unchecked Sendable {
         // Keep the Mac awake: a 2 TB transfer easily outlives the idle sleep timer.
         activityToken = ProcessInfo.processInfo.beginActivity(
             options: [.userInitiated, .idleSystemSleepDisabled, .suddenTerminationDisabled],
-            reason: "Copia e verifica tra SSD"
+            reason: "Copying and verifying between SSDs"
         )
         defer {
             if let activityToken { ProcessInfo.processInfo.endActivity(activityToken) }
@@ -140,26 +140,26 @@ final class TransferEngine: @unchecked Sendable {
         var isDir: ObjCBool = false
 
         guard fm.fileExists(atPath: request.source.path, isDirectory: &isDir), isDir.boolValue else {
-            throw TransferSetupError.message("La cartella di origine non esiste o non è più disponibile.")
+            throw TransferSetupError.message(L("setup.sourceMissing"))
         }
         guard fm.fileExists(atPath: request.destination.path, isDirectory: &isDir), isDir.boolValue else {
-            throw TransferSetupError.message("La cartella di destinazione non esiste o non è più disponibile.")
+            throw TransferSetupError.message(L("setup.destinationMissing"))
         }
 
         let source = request.source.standardizedFileURL.resolvingSymlinksInPath().path
         let destination = request.destination.standardizedFileURL.resolvingSymlinksInPath().path
 
         if source == destination {
-            throw TransferSetupError.message("Origine e destinazione coincidono.")
+            throw TransferSetupError.message(L("setup.samePath"))
         }
         if isSubpath(destination, of: source) {
-            throw TransferSetupError.message("La destinazione si trova dentro l'origine: la copia si ripeterebbe all'infinito.")
+            throw TransferSetupError.message(L("setup.destinationInsideSource"))
         }
         if isSubpath(source, of: destination) {
-            throw TransferSetupError.message("L'origine si trova dentro la destinazione: la copia sovrascriverebbe i file originali.")
+            throw TransferSetupError.message(L("setup.sourceInsideDestination"))
         }
         guard access(request.destination.fsPath, W_OK) == 0 else {
-            throw TransferSetupError.message("La destinazione è in sola lettura o non è scrivibile.")
+            throw TransferSetupError.message(L("setup.destinationReadOnly"))
         }
     }
 
@@ -173,15 +173,15 @@ final class TransferEngine: @unchecked Sendable {
         let needed = snapshot().totalBytes
         guard needed > volume.availableCapacity else { return }
 
-        let message = "Servono \(Fmt.bytes(needed)) ma sulla destinazione sono liberi \(Fmt.bytes(volume.availableCapacity))."
+        let message = L("space.needed", Fmt.bytes(needed), Fmt.bytes(volume.availableCapacity))
         if request.options.skipIdenticalFiles {
             // Files already present will be skipped, so the copy may still fit.
             record(issue: TransferIssue(path: request.destination.path,
-                                        message: message + " Il trasferimento prosegue perché i file già identici verranno saltati.",
+                                        message: L("space.willSkip", message),
                                         severity: .warning))
         } else {
             lock.lock()
-            fatalMessage = "Spazio insufficiente. " + message
+            fatalMessage = L("space.insufficient", message)
             lock.unlock()
         }
     }
@@ -262,7 +262,7 @@ final class TransferEngine: @unchecked Sendable {
 
             case .other:
                 self.record(issue: TransferIssue(path: entry.relativePath,
-                                                 message: "Tipo di file non supportato (socket, fifo o device): ignorato.",
+                                                 message: L("issue.unsupportedType"),
                                                  severity: .warning))
             }
         }
@@ -543,13 +543,13 @@ final class TransferEngine: @unchecked Sendable {
             options: [.producesRelativePathURLs],
             errorHandler: { [weak self] url, error in
                 self?.record(issue: TransferIssue(path: url.path,
-                                                  message: "Voce non leggibile: \(error.localizedDescription)",
+                                                  message: L("issue.unreadableEntry", error.localizedDescription),
                                                   severity: .warning))
                 return true // Skip this entry, keep walking.
             }
         ) else {
             record(issue: TransferIssue(path: request.source.path,
-                                        message: "Impossibile leggere il contenuto dell'origine.",
+                                        message: L("issue.unreadableSource"),
                                         severity: .error))
             return
         }
@@ -560,7 +560,7 @@ final class TransferEngine: @unchecked Sendable {
             let name = url.lastPathComponent
             guard let values = try? url.resourceValues(forKeys: Set(keys)) else {
                 record(issue: TransferIssue(path: url.relativePath,
-                                            message: "Attributi non leggibili: voce ignorata.",
+                                            message: L("issue.unreadableAttributes"),
                                             severity: .warning))
                 continue
             }
@@ -629,7 +629,7 @@ final class TransferEngine: @unchecked Sendable {
         guard fatalIfStrict, !request.options.continueOnError else { return }
         lock.lock()
         if fatalMessage == nil {
-            fatalMessage = "Interrotto al primo errore: \(error.localizedDescription)"
+            fatalMessage = L("engine.stoppedAtFirstError", error.localizedDescription)
         }
         lock.unlock()
         gate.cancel()

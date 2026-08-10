@@ -21,33 +21,33 @@ enum FileOpError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cancelled:
-            return "Operazione annullata."
+            return L("error.cancelled")
         case let .open(path, code):
-            return "Impossibile aprire «\(path)»: \(Self.describe(code))"
+            return L("error.open", path, Self.describe(code))
         case let .create(path, code):
-            return "Impossibile creare «\(path)»: \(Self.describe(code))"
+            return L("error.create", path, Self.describe(code))
         case let .read(path, code):
-            return "Errore di lettura su «\(path)»: \(Self.describe(code))"
+            return L("error.read", path, Self.describe(code))
         case let .write(path, code):
-            return "Errore di scrittura su «\(path)»: \(Self.describe(code))"
+            return L("error.write", path, Self.describe(code))
         case let .shortWrite(path):
-            return "Scrittura incompleta su «\(path)»: spazio esaurito o disco scollegato."
+            return L("error.shortWrite", path)
         case let .metadata(path, code):
-            return "Metadati non applicati a «\(path)»: \(Self.describe(code))"
+            return L("error.metadata", path, Self.describe(code))
         case let .symlink(path, code):
-            return "Link simbolico non creato «\(path)»: \(Self.describe(code))"
+            return L("error.symlink", path, Self.describe(code))
         case let .link(path, code):
-            return "Hard link non creato «\(path)»: \(Self.describe(code))"
+            return L("error.link", path, Self.describe(code))
         case let .makeDirectory(path, code):
-            return "Cartella non creata «\(path)»: \(Self.describe(code))"
+            return L("error.makeDirectory", path, Self.describe(code))
         case let .sizeMismatch(path, expected, actual):
-            return "Dimensione diversa su «\(path)»: attesi \(Fmt.bytes(expected)), trovati \(Fmt.bytes(actual))."
+            return L("error.sizeMismatch", path, Fmt.bytes(expected), Fmt.bytes(actual))
         case let .digestMismatch(path):
-            return "Hash SHA-256 diverso su «\(path)»: la copia non corrisponde all'originale."
+            return L("error.digestMismatch", path)
         case let .missingAtDestination(path):
-            return "File assente nella destinazione: «\(path)»."
+            return L("error.missingAtDestination", path)
         case let .dateMismatch(path):
-            return "Data di modifica diversa su «\(path)»."
+            return L("error.dateMismatch", path)
         }
     }
 

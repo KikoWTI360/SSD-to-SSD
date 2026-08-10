@@ -7,7 +7,9 @@ struct SSDCopierApp: App {
     @State private var controller = TransferController()
 
     var body: some Scene {
-        Window("Copia da SSD a SSD", id: "main") {
+        // Neutral window title: a Scene title is fixed for the process lifetime, so it must not
+        // be a translated string. The localised title lives in the window's own header instead.
+        Window("SSD Copier", id: "main") {
             ContentView(controller: controller)
                 .onAppear { appDelegate.controller = controller }
         }
@@ -15,11 +17,11 @@ struct SSDCopierApp: App {
         .commands {
             // Replaces the useless "New / Open" group: this app has no documents.
             CommandGroup(replacing: .newItem) {
-                Button("Avvia copia") { controller.requestStart() }
+                Button(L("action.start")) { controller.requestStart() }
                     .keyboardShortcut(.return, modifiers: .command)
                     .disabled(!controller.canStart)
 
-                Button("Aggiorna dischi") { controller.refreshVolumes() }
+                Button(L("action.refreshDisks")) { controller.refreshVolumes() }
                     .keyboardShortcut("r", modifiers: .command)
             }
         }
@@ -42,11 +44,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let alert = NSAlert()
-        alert.messageText = "Copia in corso"
-        alert.informativeText = "Uscire adesso lascerà la destinazione incompleta. Vuoi interrompere il trasferimento e uscire?"
+        alert.messageText = L("quit.title")
+        alert.informativeText = L("quit.message")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Interrompi ed esci")
-        alert.addButton(withTitle: "Continua la copia")
+        alert.addButton(withTitle: L("quit.stopAndQuit"))
+        alert.addButton(withTitle: L("quit.continue"))
 
         guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
 

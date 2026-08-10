@@ -19,7 +19,7 @@ final class TransferController {
 
         var subtitle: String {
             if isVolumeRoot, let volume { return volume.capacityDescription }
-            if let volume { return "su \(volume.name)" }
+            if let volume { return L("selection.onVolume", volume.name) }
             return url.deletingLastPathComponent().path
         }
     }
@@ -99,16 +99,16 @@ final class TransferController {
     /// Everything goes through `NSOpenPanel`: under the sandbox that panel *is* what grants the
     /// app read/write access to the drive the user picked.
     func chooseSource(startingAt volume: VolumeInfo? = nil) {
-        guard let url = presentPanel(message: "Scegli il disco (o la cartella) da copiare",
-                                     prompt: "Usa come origine",
+        guard let url = presentPanel(message: L("panel.source.message"),
+                                     prompt: L("panel.source.prompt"),
                                      directoryURL: volume?.url) else { return }
         source = makeSelection(for: url)
         BookmarkStore.save(url, to: .source)
     }
 
     func chooseDestination(startingAt volume: VolumeInfo? = nil) {
-        guard let url = presentPanel(message: "Scegli il disco (o la cartella) di destinazione",
-                                     prompt: "Usa come destinazione",
+        guard let url = presentPanel(message: L("panel.destination.message"),
+                                     prompt: L("panel.destination.prompt"),
                                      directoryURL: volume?.url) else { return }
         destination = makeSelection(for: url)
         BookmarkStore.save(url, to: .destination)
@@ -157,16 +157,16 @@ final class TransferController {
         guard let source, let destination else { return }
 
         if source.url.standardizedFileURL == destination.url.standardizedFileURL {
-            alertMessage = "Origine e destinazione coincidono. Scegli due percorsi diversi."
+            alertMessage = L("alert.samePath")
             return
         }
         if let sourceVolume = source.volume, let destinationVolume = destination.volume,
            sourceVolume.url == destinationVolume.url {
-            alertMessage = "Origine e destinazione si trovano sullo stesso volume («\(sourceVolume.name)»). Collega due dischi distinti."
+            alertMessage = L("alert.sameVolume", sourceVolume.name)
             return
         }
         if destination.volume?.isReadOnly == true {
-            alertMessage = "Il disco di destinazione è montato in sola lettura."
+            alertMessage = L("alert.destinationReadOnly")
             return
         }
 
@@ -176,9 +176,9 @@ final class TransferController {
 
         if hasVisibleContent(at: target) {
             confirmation = Confirmation(
-                title: "La destinazione non è vuota",
-                message: "«\(target.lastPathComponent)» contiene già dei file. I file con lo stesso nome verranno sovrascritti; gli altri resteranno al loro posto. Continuare?",
-                confirmTitle: "Copia comunque"
+                title: L("confirm.notEmpty.title"),
+                message: L("confirm.notEmpty.message", target.lastPathComponent),
+                confirmTitle: L("confirm.notEmpty.button")
             )
             return
         }

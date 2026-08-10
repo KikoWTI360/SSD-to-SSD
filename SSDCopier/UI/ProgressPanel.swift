@@ -13,7 +13,7 @@ struct ProgressPanel: View {
                 ProgressRing(fraction: progress.overallFraction,
                              indeterminate: progress.phase.isIndeterminate,
                              paused: isPaused,
-                             phaseTitle: isPaused ? "In pausa" : progress.phase.title)
+                             phaseTitle: isPaused ? L("status.paused") : progress.phase.title)
                     .frame(width: 168, height: 168)
 
                 VStack(alignment: .leading, spacing: 16) {
@@ -39,10 +39,10 @@ struct ProgressPanel: View {
 
     private var remaining: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Tempo rimanente")
+            Text(L("progress.remaining"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(isPaused ? "In pausa" : Fmt.eta(progress.eta))
+            Text(isPaused ? L("status.paused") : Fmt.eta(progress.eta))
                 .font(.system(size: 32, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
@@ -56,13 +56,13 @@ struct ProgressPanel: View {
                             GridItem(.flexible(), alignment: .leading)],
                   alignment: .leading,
                   spacing: 14) {
-            StatTile(label: "Velocità", value: Fmt.rate(activeRate))
-            StatTile(label: "Trascorso", value: Fmt.duration(progress.elapsed))
-            StatTile(label: "Completato", value: Fmt.percent(progress.overallFraction))
-            StatTile(label: "Dati", value: dataValue)
-            StatTile(label: "File", value: filesValue)
-            StatTile(label: "Problemi",
-                     value: counters.issueCount == 0 ? "nessuno" : Fmt.count(counters.issueCount),
+            StatTile(label: L("progress.speed"), value: Fmt.rate(activeRate))
+            StatTile(label: L("progress.elapsed"), value: Fmt.duration(progress.elapsed))
+            StatTile(label: L("progress.completed"), value: Fmt.percent(progress.overallFraction))
+            StatTile(label: L("progress.data"), value: dataValue)
+            StatTile(label: L("progress.files"), value: filesValue)
+            StatTile(label: L("progress.issues"),
+                     value: counters.issueCount == 0 ? L("progress.noIssues") : Fmt.count(counters.issueCount),
                      tint: counters.issueCount == 0 ? .primary : .orange)
         }
     }
@@ -119,13 +119,13 @@ struct ProgressPanel: View {
     private var phaseDescription: String {
         switch progress.phase {
         case .scanning:
-            "Analisi dell'origine: \(Fmt.count(counters.scannedEntries)) elementi trovati"
+            L("phase.desc.scanning", Fmt.count(counters.scannedEntries))
         case .copying:
-            "Copia dei dati"
+            L("phase.desc.copying")
         case .verifying:
-            "Verifica di ogni file"
+            L("phase.desc.verifying")
         case .finalizing:
-            "Ripristino di date e permessi delle cartelle"
+            L("phase.desc.finalizing")
         default:
             progress.phase.title
         }
@@ -221,6 +221,6 @@ struct ProgressRing: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(phaseTitle)
-        .accessibilityValue(indeterminate ? "in corso" : Fmt.percent(fraction))
+        .accessibilityValue(indeterminate ? L("progress.inProgress") : Fmt.percent(fraction))
     }
 }

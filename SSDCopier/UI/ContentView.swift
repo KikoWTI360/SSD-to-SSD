@@ -3,7 +3,13 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var controller: TransferController
 
+    private var languageSetting: LanguageSetting { LanguageSetting.shared }
+
     var body: some View {
+        // Reading the selection here registers the dependency; `.id` then forces a full rebuild
+        // so every cached subview picks up the new strings instead of keeping the old ones.
+        let language = languageSetting.selection
+
         VStack(spacing: 0) {
             header
             Divider()
@@ -27,12 +33,13 @@ struct ContentView: View {
             Divider()
             footer
         }
+        .id(language)
         .frame(minWidth: 880, minHeight: 660)
         .sheet(item: $controller.report) { report in
             ReportSheet(report: report) { controller.dismissReport() }
         }
-        .alert("Impossibile iniziare", isPresented: alertBinding) {
-            Button("OK", role: .cancel) { controller.alertMessage = nil }
+        .alert(L("alert.cannotStart"), isPresented: alertBinding) {
+            Button(L("action.ok"), role: .cancel) { controller.alertMessage = nil }
         } message: {
             Text(controller.alertMessage ?? "")
         }
@@ -40,7 +47,7 @@ struct ContentView: View {
                isPresented: confirmationBinding,
                presenting: controller.confirmation) { confirmation in
             Button(confirmation.confirmTitle) { controller.confirmStart() }
-            Button("Annulla", role: .cancel) { controller.confirmation = nil }
+            Button(L("action.cancel"), role: .cancel) { controller.confirmation = nil }
         } message: { confirmation in
             Text(confirmation.message)
         }
@@ -51,22 +58,46 @@ struct ContentView: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Copia da SSD a SSD")
+                Text(L("app.title"))
                     .font(.title2.weight(.semibold))
-                Text("Copia integrale con verifica e tempo rimanente calcolato")
+                Text(L("app.subtitle"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
+
+            languageMenu
+
             Button {
                 controller.refreshVolumes()
             } label: {
-                Label("Aggiorna dischi", systemImage: "arrow.clockwise")
+                Label(L("action.refreshDisks"), systemImage: "arrow.clockwise")
             }
-            .help("Rileggi l'elenco dei volumi collegati")
+            .help(L("action.refreshDisks.help"))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
+    }
+
+    private var languageMenu: some View {
+        Menu {
+            ForEach(AppLanguage.allCases) { language in
+                Button {
+                    languageSetting.select(language)
+                } label: {
+                    if language == languageSetting.selection {
+                        Label(language.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(language.displayName)
+                    }
+                }
+            }
+        } label: {
+            Label(L("language.label"), systemImage: "globe")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help(L("language.help"))
     }
 
     private var disks: some View {
@@ -88,7 +119,7 @@ struct ContentView: View {
                     Image(systemName: "arrow.left.arrow.right")
                 }
                 .buttonStyle(.borderless)
-                .help("Inverti origine e destinazione")
+                .help(L("action.swap.help"))
                 .disabled(controller.isRunning)
             }
             .frame(width: 44)
@@ -108,10 +139,10 @@ struct ContentView: View {
             Spacer()
 
             if controller.isRunning {
-                Button(controller.isPaused ? "Riprendi" : "Pausa") {
+                Button(controller.isPaused ? L("action.resume") : L("action.pause")) {
                     controller.togglePause()
                 }
-                Button("Annulla", role: .destructive) {
+                Button(L("action.cancel"), role: .destructive) {
                     controller.cancel()
                 }
             }
@@ -119,7 +150,7 @@ struct ContentView: View {
             Button {
                 controller.requestStart()
             } label: {
-                Label("Avvia copia", systemImage: "play.fill")
+                Label(L("action.start"), systemImage: "play.fill")
                     .frame(minWidth: 96)
             }
             .buttonStyle(.borderedProminent)
@@ -135,16 +166,16 @@ struct ContentView: View {
             HStack(spacing: 6) {
                 ProgressView()
                     .controlSize(.small)
-                Text(controller.isPaused ? "In pausa" : controller.progress.phase.title)
+                Text(controller.isPaused ? L("status.paused") : controller.progress.phase.title)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
         } else if controller.source == nil || controller.destination == nil {
-            Text("Seleziona il disco di origine e quello di destinazione.")
+            Text(L("status.selectDisks"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         } else {
-            Text("Pronto: verifica \(controller.options.verification.title.lowercased()).")
+            Text(L("status.ready", controller.options.verification.title.lowercased()))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

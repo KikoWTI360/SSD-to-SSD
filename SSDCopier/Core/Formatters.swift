@@ -41,8 +41,8 @@ enum Fmt {
 
     /// ETA rounded to a sensible granularity so the label stops flickering on long jobs.
     static func eta(_ seconds: TimeInterval?) -> String {
-        guard let seconds, seconds.isFinite, seconds >= 0 else { return "Calcolo…" }
-        if seconds < 5 { return "pochi secondi" }
+        guard let seconds, seconds.isFinite, seconds >= 0 else { return L("time.calculating") }
+        if seconds < 5 { return L("time.fewSeconds") }
         let rounded: TimeInterval = if seconds > 3600 {
             (seconds / 60).rounded() * 60
         } else if seconds > 300 {

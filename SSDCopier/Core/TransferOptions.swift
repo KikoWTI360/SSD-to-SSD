@@ -12,19 +12,11 @@ enum VerificationMode: String, CaseIterable, Identifiable, Codable, Sendable {
     var id: String { rawValue }
 
     var title: String {
-        switch self {
-        case .none: "Nessuna"
-        case .quick: "Rapida"
-        case .checksum: "SHA-256"
-        }
+        L("verify.\(rawValue).title")
     }
 
     var subtitle: String {
-        switch self {
-        case .none: "Copia e basta, nessun controllo."
-        case .quick: "Confronta dimensione e data di ogni file."
-        case .checksum: "Rilegge origine e destinazione e confronta l'hash."
-        }
+        L("verify.\(rawValue).subtitle")
     }
 }
 

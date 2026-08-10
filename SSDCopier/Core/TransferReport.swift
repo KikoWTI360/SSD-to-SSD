@@ -6,10 +6,7 @@ struct TransferIssue: Identifiable, Sendable {
         case error
 
         var label: String {
-            switch self {
-            case .warning: "Avviso"
-            case .error: "Errore"
-            }
+            L("issue.\(rawValue)")
         }
 
         var symbol: String {
@@ -36,12 +33,7 @@ struct TransferReport: Identifiable, Sendable {
         case failed
 
         var title: String {
-            switch self {
-            case .completed: "Copia completata e verificata"
-            case .completedWithIssues: "Completata con avvisi"
-            case .cancelled: "Copia annullata"
-            case .failed: "Copia interrotta"
-            }
+            L("outcome.\(rawValue)")
         }
 
         var symbol: String {
@@ -72,39 +64,57 @@ struct TransferReport: Identifiable, Sendable {
         return Double(counters.copiedBytes) / duration
     }
 
-    /// Plain-text log, used by "Copia negli appunti" and by the export panel.
+    /// Plain-text log, used by "copy to clipboard" and by the export panel.
     func plainText() -> String {
-        let df = DateFormatter()
-        df.dateStyle = .medium
-        df.timeStyle = .medium
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+
+        var rows: [(String, String)] = [
+            (L("report.outcome"), outcome.title),
+        ]
+        if let fatalMessage {
+            rows.append((L("report.reason"), fatalMessage))
+        }
+        rows.append(contentsOf: [
+            (L("report.source"), sourcePath),
+            (L("report.destination"), destinationPath),
+            (L("report.start"), formatter.string(from: startedAt)),
+            (L("report.end"), formatter.string(from: finishedAt)),
+            (L("report.duration"), Fmt.duration(duration)),
+            (L("report.verification"), verification.title),
+            ("", ""),
+            (L("report.folders"), Fmt.count(counters.totalDirectories)),
+            (L("report.totalFiles"), Fmt.count(counters.totalFiles)),
+            (L("report.symlinks"), Fmt.count(counters.totalSymlinks)),
+            (L("report.copied"), "\(Fmt.count(counters.copiedFiles)) (\(Fmt.bytes(counters.copiedBytes)))"),
+            (L("report.skipped"), "\(Fmt.count(counters.skippedFiles)) (\(Fmt.bytes(counters.skippedBytes)))"),
+            (L("report.failed"), Fmt.count(counters.failedFiles)),
+        ])
+        if verification != .none {
+            rows.append((L("report.verified"), "\(Fmt.count(counters.verifiedFiles)) (\(Fmt.bytes(counters.verifiedBytes)))"))
+            rows.append((L("report.mismatched"), Fmt.count(counters.mismatchedFiles)))
+        }
+        rows.append((L("report.averageSpeed"), Fmt.rate(averageRate)))
+
+        // Column width is measured, not hardcoded: label lengths differ per language.
+        let width = rows.map { $0.0.count }.max() ?? 0
 
         var lines: [String] = []
-        lines.append("SSD Copier — rapporto di trasferimento")
+        lines.append(L("report.title"))
         lines.append(String(repeating: "=", count: 46))
-        lines.append("Esito:          \(outcome.title)")
-        if let fatalMessage { lines.append("Motivo:         \(fatalMessage)") }
-        lines.append("Origine:        \(sourcePath)")
-        lines.append("Destinazione:   \(destinationPath)")
-        lines.append("Inizio:         \(df.string(from: startedAt))")
-        lines.append("Fine:           \(df.string(from: finishedAt))")
-        lines.append("Durata:         \(Fmt.duration(duration))")
-        lines.append("Verifica:       \(verification.title)")
-        lines.append("")
-        lines.append("Cartelle:       \(counters.totalDirectories)")
-        lines.append("File totali:    \(counters.totalFiles)")
-        lines.append("Link simbolici: \(counters.totalSymlinks)")
-        lines.append("Copiati:        \(counters.copiedFiles) (\(Fmt.bytes(counters.copiedBytes)))")
-        lines.append("Saltati:        \(counters.skippedFiles) (\(Fmt.bytes(counters.skippedBytes)))")
-        lines.append("Non riusciti:   \(counters.failedFiles)")
-        if verification != .none {
-            lines.append("Verificati:     \(counters.verifiedFiles) (\(Fmt.bytes(counters.verifiedBytes)))")
-            lines.append("Discordanti:    \(counters.mismatchedFiles)")
+        for (label, value) in rows {
+            if label.isEmpty && value.isEmpty {
+                lines.append("")
+            } else {
+                let padded = label.padding(toLength: width, withPad: " ", startingAt: 0)
+                lines.append("\(padded)  \(value)")
+            }
         }
-        lines.append("Velocità media: \(Fmt.rate(averageRate))")
 
         if !issues.isEmpty {
             lines.append("")
-            lines.append("Problemi (\(issues.count))")
+            lines.append(L("report.issues", Fmt.count(issues.count)))
             lines.append(String(repeating: "-", count: 46))
             for issue in issues {
                 lines.append("[\(issue.severity.label)] \(issue.path.isEmpty ? "—" : issue.path)")

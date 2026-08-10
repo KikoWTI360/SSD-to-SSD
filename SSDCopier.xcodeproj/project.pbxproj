@@ -12,6 +12,7 @@
 		248128D7F5E500D894F77979 /* Concurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5E35F1420E238284AAB708 /* Concurrency.swift */; };
 		E9A667B91B5503B6C359A42D /* FileOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB42A112B2623DC092D5F73 /* FileOps.swift */; };
 		2733525D46A9D0F57E47F9F9 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00188164EE05942E6E7C6E /* Formatters.swift */; };
+		7E7FAC9118055271E6AD5B70 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AED551621C177A4AE333C56 /* Localization.swift */; };
 		3453EEA1711B634D55150616 /* RateEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */; };
 		0EC90B467D86D9653CE154E7 /* TransferEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25254C1F931CA380B4500B5C /* TransferEngine.swift */; };
 		30545E15C36CE5F230792FC2 /* TransferOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F6BA32909949C587BC01D6 /* TransferOptions.swift */; };
@@ -37,6 +38,7 @@
 		AD5E35F1420E238284AAB708 /* Concurrency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Concurrency.swift; sourceTree = "<group>"; };
 		2CB42A112B2623DC092D5F73 /* FileOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOps.swift; sourceTree = "<group>"; };
 		DA00188164EE05942E6E7C6E /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
+		8AED551621C177A4AE333C56 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateEstimator.swift; sourceTree = "<group>"; };
 		25254C1F931CA380B4500B5C /* TransferEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferEngine.swift; sourceTree = "<group>"; };
 		65F6BA32909949C587BC01D6 /* TransferOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferOptions.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				AD5E35F1420E238284AAB708 /* Concurrency.swift */,
 				2CB42A112B2623DC092D5F73 /* FileOps.swift */,
 				DA00188164EE05942E6E7C6E /* Formatters.swift */,
+				8AED551621C177A4AE333C56 /* Localization.swift */,
 				62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */,
 				25254C1F931CA380B4500B5C /* TransferEngine.swift */,
 				65F6BA32909949C587BC01D6 /* TransferOptions.swift */,
@@ -204,6 +207,7 @@
 				248128D7F5E500D894F77979 /* Concurrency.swift in Sources */,
 				E9A667B91B5503B6C359A42D /* FileOps.swift in Sources */,
 				2733525D46A9D0F57E47F9F9 /* Formatters.swift in Sources */,
+				7E7FAC9118055271E6AD5B70 /* Localization.swift in Sources */,
 				3453EEA1711B634D55150616 /* RateEstimator.swift in Sources */,
 				0EC90B467D86D9653CE154E7 /* TransferEngine.swift in Sources */,
 				30545E15C36CE5F230792FC2 /* TransferOptions.swift in Sources */,
@@ -262,7 +266,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Copia SSD";
+				INFOPLIST_KEY_CFBundleDisplayName = "SSD Copier";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Serve solo se scegli una cartella sulla Scrivania come origine o destinazione.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Serve solo se scegli una cartella in Documenti come origine o destinazione.";
@@ -316,7 +320,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Copia SSD";
+				INFOPLIST_KEY_CFBundleDisplayName = "SSD Copier";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Serve solo se scegli una cartella sulla Scrivania come origine o destinazione.";
 				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Serve solo se scegli una cartella in Documenti come origine o destinazione.";

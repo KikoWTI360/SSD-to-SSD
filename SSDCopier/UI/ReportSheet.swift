@@ -48,7 +48,10 @@ struct ReportSheet: View {
                         .font(.callout)
                         .foregroundStyle(.red)
                 } else {
-                    Text("\(Fmt.bytes(report.counters.copiedBytes)) in \(Fmt.duration(report.duration)) · media \(Fmt.rate(report.averageRate))")
+                    Text(L("report.headerStats",
+                           Fmt.bytes(report.counters.copiedBytes),
+                           Fmt.duration(report.duration),
+                           Fmt.rate(report.averageRate)))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -60,33 +63,33 @@ struct ReportSheet: View {
 
     private var summary: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Riepilogo")
+            Text(L("report.summary"))
                 .font(.headline)
 
             LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading),
                                 GridItem(.flexible(), alignment: .leading)],
                       alignment: .leading,
                       spacing: 12) {
-                StatTile(label: "File copiati",
+                StatTile(label: L("report.filesCopied"),
                          value: "\(Fmt.count(report.counters.copiedFiles)) · \(Fmt.bytes(report.counters.copiedBytes))")
-                StatTile(label: "File saltati",
+                StatTile(label: L("report.filesSkipped"),
                          value: "\(Fmt.count(report.counters.skippedFiles)) · \(Fmt.bytes(report.counters.skippedBytes))")
-                StatTile(label: "Cartelle", value: Fmt.count(report.counters.totalDirectories))
-                StatTile(label: "Link simbolici", value: Fmt.count(report.counters.totalSymlinks))
-                StatTile(label: "Non riusciti",
+                StatTile(label: L("report.folders"), value: Fmt.count(report.counters.totalDirectories))
+                StatTile(label: L("report.symlinks"), value: Fmt.count(report.counters.totalSymlinks))
+                StatTile(label: L("report.failed"),
                          value: Fmt.count(report.counters.failedFiles),
                          tint: report.counters.failedFiles > 0 ? .red : .primary)
-                StatTile(label: "Verifica \(report.verification.title)",
+                StatTile(label: L("report.verificationLabel", report.verification.title),
                          value: verificationSummary,
                          tint: report.counters.mismatchedFiles > 0 ? .red : .primary)
             }
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 4) {
-                    LabeledContent("Origine") {
+                    LabeledContent(L("report.source")) {
                         Text(report.sourcePath).lineLimit(1).truncationMode(.middle)
                     }
-                    LabeledContent("Destinazione") {
+                    LabeledContent(L("report.destination")) {
                         Text(report.destinationPath).lineLimit(1).truncationMode(.middle)
                     }
                 }
@@ -99,17 +102,17 @@ struct ReportSheet: View {
     private var verificationSummary: String {
         switch report.verification {
         case .none:
-            "non eseguita"
+            L("report.verify.notRun")
         case .quick, .checksum:
             report.counters.mismatchedFiles == 0
-                ? "\(Fmt.count(report.counters.verifiedFiles)) file OK"
-                : "\(Fmt.count(report.counters.mismatchedFiles)) discordanti"
+                ? L("report.verify.ok", Fmt.count(report.counters.verifiedFiles))
+                : L("report.verify.mismatch", Fmt.count(report.counters.mismatchedFiles))
         }
     }
 
     private var issues: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Problemi (\(report.issues.count))")
+            Text(L("report.issues", Fmt.count(report.issues.count)))
                 .font(.headline)
 
             VStack(spacing: 0) {
@@ -139,7 +142,7 @@ struct ReportSheet: View {
                 }
 
                 if report.issues.count > 300 {
-                    Text("… e altri \(report.issues.count - 300). Esporta il rapporto per l'elenco completo.")
+                    Text(L("report.moreIssues", Fmt.count(report.issues.count - 300)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(8)
@@ -154,13 +157,13 @@ struct ReportSheet: View {
 
     private var footer: some View {
         HStack {
-            Button("Copia negli appunti") {
+            Button(L("report.copyToClipboard")) {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(report.plainText(), forType: .string)
             }
-            Button("Esporta rapporto…", action: exportReport)
+            Button(L("report.export"), action: exportReport)
             Spacer()
-            Button("Chiudi", action: onDismiss)
+            Button(L("report.close"), action: onDismiss)
                 .keyboardShortcut(.defaultAction)
         }
         .padding(16)
@@ -169,7 +172,7 @@ struct ReportSheet: View {
     private func exportReport() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.plainText]
-        panel.nameFieldStringValue = "Rapporto copia SSD.txt"
+        panel.nameFieldStringValue = L("report.filename")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         try? report.plainText().write(to: url, atomically: true, encoding: .utf8)
     }
