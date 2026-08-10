@@ -71,10 +71,10 @@ enum FileOps {
         return info
     }
 
-    /// `st_mode` is a `mode_t` (UInt16) while the `S_IF*` constants import as `Int32`, so the
-    /// comparison only type-checks once both sides are converted explicitly.
-    static func isType(_ info: stat, _ mask: Int32) -> Bool {
-        (info.st_mode & mode_t(S_IFMT)) == mode_t(mask)
+    /// Masks off the file-type bits of `st_mode`. The `S_IF*` constants import as `mode_t`,
+    /// the same type as `st_mode` itself, so no conversion is involved.
+    static func isType(_ info: stat, _ mask: mode_t) -> Bool {
+        (info.st_mode & S_IFMT) == mask
     }
 
     static func modificationDate(_ info: stat) -> TimeInterval {
