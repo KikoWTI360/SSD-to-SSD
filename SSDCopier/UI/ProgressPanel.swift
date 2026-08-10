@@ -1,0 +1,226 @@
+import SwiftUI
+
+/// The loader: ring, ETA, throughput and a per-phase bar.
+struct ProgressPanel: View {
+    let progress: TransferProgress
+    let isPaused: Bool
+
+    private var counters: TransferCounters { progress.counters }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center, spacing: 24) {
+                ProgressRing(fraction: progress.overallFraction,
+                             indeterminate: progress.phase.isIndeterminate,
+                             paused: isPaused,
+                             phaseTitle: isPaused ? "In pausa" : progress.phase.title)
+                    .frame(width: 168, height: 168)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    remaining
+                    stats
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            phaseBar
+            currentItem
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.secondary.opacity(0.18))
+        )
+    }
+
+    private var remaining: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Tempo rimanente")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(isPaused ? "In pausa" : Fmt.eta(progress.eta))
+                .font(.system(size: 32, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .animation(.easeOut(duration: 0.25), value: progress.eta)
+        }
+    }
+
+    private var stats: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading),
+                            GridItem(.flexible(), alignment: .leading),
+                            GridItem(.flexible(), alignment: .leading)],
+                  alignment: .leading,
+                  spacing: 14) {
+            StatTile(label: "Velocità", value: Fmt.rate(activeRate))
+            StatTile(label: "Trascorso", value: Fmt.duration(progress.elapsed))
+            StatTile(label: "Completato", value: Fmt.percent(progress.overallFraction))
+            StatTile(label: "Dati", value: dataValue)
+            StatTile(label: "File", value: filesValue)
+            StatTile(label: "Problemi",
+                     value: counters.issueCount == 0 ? "nessuno" : Fmt.count(counters.issueCount),
+                     tint: counters.issueCount == 0 ? .primary : .orange)
+        }
+    }
+
+    private var activeRate: Double {
+        progress.phase == .verifying ? progress.verifyRate : progress.copyRate
+    }
+
+    private var dataValue: String {
+        if progress.phase == .verifying {
+            return "\(Fmt.bytes(counters.verifiedBytes)) / \(Fmt.bytes(counters.totalBytes))"
+        }
+        if progress.phase.isIndeterminate {
+            return Fmt.bytes(counters.totalBytes)
+        }
+        return "\(Fmt.bytes(counters.processedBytes)) / \(Fmt.bytes(counters.totalBytes))"
+    }
+
+    private var filesValue: String {
+        if progress.phase == .scanning {
+            return Fmt.count(counters.scannedEntries)
+        }
+        let done = progress.phase == .verifying ? counters.verifiedFiles : counters.processedFiles
+        return "\(Fmt.count(done)) / \(Fmt.count(counters.totalFiles))"
+    }
+
+    private var phaseBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(phaseDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if !progress.phase.isIndeterminate {
+                    Text(Fmt.percent(progress.phaseFraction))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if progress.phase.isIndeterminate {
+                ProgressView()
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: .infinity)
+            } else {
+                ProgressView(value: progress.phaseFraction)
+                    .progressViewStyle(.linear)
+                    .animation(.easeOut(duration: 0.3), value: progress.phaseFraction)
+            }
+        }
+    }
+
+    private var phaseDescription: String {
+        switch progress.phase {
+        case .scanning:
+            "Analisi dell'origine: \(Fmt.count(counters.scannedEntries)) elementi trovati"
+        case .copying:
+            "Copia dei dati"
+        case .verifying:
+            "Verifica di ogni file"
+        case .finalizing:
+            "Ripristino di date e permessi delle cartelle"
+        default:
+            progress.phase.title
+        }
+    }
+
+    @ViewBuilder
+    private var currentItem: some View {
+        if !counters.currentItem.isEmpty {
+            HStack(spacing: 6) {
+                Image(systemName: "doc")
+                    .foregroundStyle(.secondary)
+                Text(Fmt.shortPath(counters.currentItem, max: 90))
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+    }
+}
+
+struct StatTile: View {
+    let label: String
+    let value: String
+    var tint: Color = .primary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.callout.weight(.medium))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+}
+
+struct ProgressRing: View {
+    let fraction: Double
+    let indeterminate: Bool
+    let paused: Bool
+    let phaseTitle: String
+
+    @State private var spin = false
+
+    private var gradient: AngularGradient {
+        AngularGradient(colors: paused ? [.orange, .yellow] : [.blue, .cyan, .green],
+                        center: .center)
+    }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.secondary.opacity(0.15), lineWidth: 16)
+
+            if indeterminate {
+                Circle()
+                    .trim(from: 0, to: 0.22)
+                    .stroke(gradient, style: StrokeStyle(lineWidth: 16, lineCap: .round))
+                    .rotationEffect(.degrees(spin ? 270 : -90))
+                    .animation(.linear(duration: 1.1).repeatForever(autoreverses: false), value: spin)
+                    .onAppear { spin = true }
+            } else {
+                Circle()
+                    .trim(from: 0, to: max(0.002, min(fraction, 1)))
+                    .stroke(gradient, style: StrokeStyle(lineWidth: 16, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.easeOut(duration: 0.35), value: fraction)
+            }
+
+            VStack(spacing: 2) {
+                if indeterminate {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(Fmt.percent(fraction))
+                        .font(.system(size: 36, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .animation(.easeOut(duration: 0.25), value: fraction)
+                }
+                Text(phaseTitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 24)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(phaseTitle)
+        .accessibilityValue(indeterminate ? "in corso" : Fmt.percent(fraction))
+    }
+}

@@ -1,0 +1,359 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0262208282D85B7C3956B408 /* SSDCopierApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D46CC894DFBE543E2F63C0 /* SSDCopierApp.swift */; };
+		E18A9FB8108006A023FB6CB2 /* BookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F2BC3E827BDB905007310C9 /* BookmarkStore.swift */; };
+		248128D7F5E500D894F77979 /* Concurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5E35F1420E238284AAB708 /* Concurrency.swift */; };
+		E9A667B91B5503B6C359A42D /* FileOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB42A112B2623DC092D5F73 /* FileOps.swift */; };
+		2733525D46A9D0F57E47F9F9 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA00188164EE05942E6E7C6E /* Formatters.swift */; };
+		3453EEA1711B634D55150616 /* RateEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */; };
+		0EC90B467D86D9653CE154E7 /* TransferEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25254C1F931CA380B4500B5C /* TransferEngine.swift */; };
+		30545E15C36CE5F230792FC2 /* TransferOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F6BA32909949C587BC01D6 /* TransferOptions.swift */; };
+		7EA969BBF45A7E54CBCB9043 /* TransferProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0BE9F81C7946B43F5B1101 /* TransferProgress.swift */; };
+		9E5BF818BBB931403DF93C3E /* TransferReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60F40F528206E65DFED6FB9A /* TransferReport.swift */; };
+		9A9010096ED87DFCA24FA39C /* VolumeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F616437D9826AC148031DA83 /* VolumeScanner.swift */; };
+		A6BDEFFDE322236563678D2B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6BA5C4F222048E2AE8FC57F /* ContentView.swift */; };
+		715946642A17FF4323FBC7D4 /* DiskCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD75BE753231A23604503FC4 /* DiskCard.swift */; };
+		DD32442317C3EE013D42AEE4 /* OptionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CAF4915B6A43D6903AAC63 /* OptionsPanel.swift */; };
+		7C64E6ECB8246D32F94B2D35 /* ProgressPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48295E23A9372CE824426FAF /* ProgressPanel.swift */; };
+		DC168B0A1841DA3E15EB036B /* ReportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCAD1535B04CCBCD8AB39C0 /* ReportSheet.swift */; };
+		D5E31227E25C84CA7FC46E44 /* TransferController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 247A7578628478ECA2D4C52E /* TransferController.swift */; };
+		5364BFFB65449196B9A42C81 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 67854A39393DBD37BDE6B5EA /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F5BF48AA40CAD7891EB709FC /* SSDCopier.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SSDCopier.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		86B3BC083DF59791BE56CFAE /* SSDCopier.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SSDCopier.entitlements; sourceTree = "<group>"; };
+		3905D7917F2B3429490B01CF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		B9D46CC894DFBE543E2F63C0 /* SSDCopierApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSDCopierApp.swift; sourceTree = "<group>"; };
+		67854A39393DBD37BDE6B5EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2F2BC3E827BDB905007310C9 /* BookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkStore.swift; sourceTree = "<group>"; };
+		AD5E35F1420E238284AAB708 /* Concurrency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Concurrency.swift; sourceTree = "<group>"; };
+		2CB42A112B2623DC092D5F73 /* FileOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOps.swift; sourceTree = "<group>"; };
+		DA00188164EE05942E6E7C6E /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
+		62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateEstimator.swift; sourceTree = "<group>"; };
+		25254C1F931CA380B4500B5C /* TransferEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferEngine.swift; sourceTree = "<group>"; };
+		65F6BA32909949C587BC01D6 /* TransferOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferOptions.swift; sourceTree = "<group>"; };
+		3D0BE9F81C7946B43F5B1101 /* TransferProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferProgress.swift; sourceTree = "<group>"; };
+		60F40F528206E65DFED6FB9A /* TransferReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferReport.swift; sourceTree = "<group>"; };
+		F616437D9826AC148031DA83 /* VolumeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeScanner.swift; sourceTree = "<group>"; };
+		F6BA5C4F222048E2AE8FC57F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		DD75BE753231A23604503FC4 /* DiskCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskCard.swift; sourceTree = "<group>"; };
+		87CAF4915B6A43D6903AAC63 /* OptionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsPanel.swift; sourceTree = "<group>"; };
+		48295E23A9372CE824426FAF /* ProgressPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPanel.swift; sourceTree = "<group>"; };
+		0DCAD1535B04CCBCD8AB39C0 /* ReportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportSheet.swift; sourceTree = "<group>"; };
+		247A7578628478ECA2D4C52E /* TransferController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		29B2D46AA747A59804D46E1F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7882D14E196057770B59E53D = {
+			isa = PBXGroup;
+			children = (
+				FDBF375522811A37D7D73A14 /* SSDCopier */,
+				86B3BC083DF59791BE56CFAE /* SSDCopier.entitlements */,
+				3905D7917F2B3429490B01CF /* README.md */,
+				BF7A2D27A78D590BDEF15AF2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FDBF375522811A37D7D73A14 /* SSDCopier */ = {
+			isa = PBXGroup;
+			children = (
+				8AB2B59C3BD0224A33D12A04 /* App */,
+				67854A39393DBD37BDE6B5EA /* Assets.xcassets */,
+				9938A3F8B0CEE349DF7DEB95 /* Core */,
+				F953F1CEAE9062CEF228117D /* UI */,
+			);
+			path = SSDCopier;
+			sourceTree = "<group>";
+		};
+		8AB2B59C3BD0224A33D12A04 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B9D46CC894DFBE543E2F63C0 /* SSDCopierApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9938A3F8B0CEE349DF7DEB95 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				2F2BC3E827BDB905007310C9 /* BookmarkStore.swift */,
+				AD5E35F1420E238284AAB708 /* Concurrency.swift */,
+				2CB42A112B2623DC092D5F73 /* FileOps.swift */,
+				DA00188164EE05942E6E7C6E /* Formatters.swift */,
+				62A81AB03CF1AAF5075441C5 /* RateEstimator.swift */,
+				25254C1F931CA380B4500B5C /* TransferEngine.swift */,
+				65F6BA32909949C587BC01D6 /* TransferOptions.swift */,
+				3D0BE9F81C7946B43F5B1101 /* TransferProgress.swift */,
+				60F40F528206E65DFED6FB9A /* TransferReport.swift */,
+				F616437D9826AC148031DA83 /* VolumeScanner.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		F953F1CEAE9062CEF228117D /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				F6BA5C4F222048E2AE8FC57F /* ContentView.swift */,
+				DD75BE753231A23604503FC4 /* DiskCard.swift */,
+				87CAF4915B6A43D6903AAC63 /* OptionsPanel.swift */,
+				48295E23A9372CE824426FAF /* ProgressPanel.swift */,
+				0DCAD1535B04CCBCD8AB39C0 /* ReportSheet.swift */,
+				247A7578628478ECA2D4C52E /* TransferController.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		BF7A2D27A78D590BDEF15AF2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F5BF48AA40CAD7891EB709FC /* SSDCopier.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		42AEFBAE01D2DFD981F7DA7D /* SSDCopier */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F707ED8CFBC457F7F618ECA6 /* Build configuration list for PBXNativeTarget "SSDCopier" */;
+			buildPhases = (
+				E7209FB05162B7572F88D05E /* Sources */,
+				29B2D46AA747A59804D46E1F /* Frameworks */,
+				66F8606E9F0A136E2228EBCB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SSDCopier;
+			productName = SSDCopier;
+			productReference = F5BF48AA40CAD7891EB709FC /* SSDCopier.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					42AEFBAE01D2DFD981F7DA7D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 9D908D8792E5642B2623649E /* Build configuration list for PBXProject "SSDCopier" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = it;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				it,
+				Base,
+			);
+			mainGroup = 7882D14E196057770B59E53D;
+			productRefGroup = BF7A2D27A78D590BDEF15AF2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D /* SSDCopier */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		66F8606E9F0A136E2228EBCB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5364BFFB65449196B9A42C81 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E7209FB05162B7572F88D05E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0262208282D85B7C3956B408 /* SSDCopierApp.swift in Sources */,
+				E18A9FB8108006A023FB6CB2 /* BookmarkStore.swift in Sources */,
+				248128D7F5E500D894F77979 /* Concurrency.swift in Sources */,
+				E9A667B91B5503B6C359A42D /* FileOps.swift in Sources */,
+				2733525D46A9D0F57E47F9F9 /* Formatters.swift in Sources */,
+				3453EEA1711B634D55150616 /* RateEstimator.swift in Sources */,
+				0EC90B467D86D9653CE154E7 /* TransferEngine.swift in Sources */,
+				30545E15C36CE5F230792FC2 /* TransferOptions.swift in Sources */,
+				7EA969BBF45A7E54CBCB9043 /* TransferProgress.swift in Sources */,
+				9E5BF818BBB931403DF93C3E /* TransferReport.swift in Sources */,
+				9A9010096ED87DFCA24FA39C /* VolumeScanner.swift in Sources */,
+				A6BDEFFDE322236563678D2B /* ContentView.swift in Sources */,
+				715946642A17FF4323FBC7D4 /* DiskCard.swift in Sources */,
+				DD32442317C3EE013D42AEE4 /* OptionsPanel.swift in Sources */,
+				7C64E6ECB8246D32F94B2D35 /* ProgressPanel.swift in Sources */,
+				DC168B0A1841DA3E15EB036B /* ReportSheet.swift in Sources */,
+				D5E31227E25C84CA7FC46E44 /* TransferController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E90355B091DE60836B9EB630 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)");
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		EE00C0879F7527FA9476B8E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SSDCopier.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Copia SSD";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Serve solo se scegli una cartella sulla Scrivania come origine o destinazione.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Serve solo se scegli una cartella in Documenti come origine o destinazione.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Serve solo se scegli una cartella in Download come origine o destinazione.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "Serve solo se scegli un volume di rete come origine o destinazione.";
+				INFOPLIST_KEY_NSRemovableVolumesUsageDescription = "Serve per leggere e scrivere sui dischi esterni che scegli come origine e destinazione.";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.worldtravelin360.SSDCopier;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F45E008F885674FC524C8F02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		17AD4E1B8D0A311E311FC4D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SSDCopier.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Copia SSD";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Serve solo se scegli una cartella sulla Scrivania come origine o destinazione.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Serve solo se scegli una cartella in Documenti come origine o destinazione.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Serve solo se scegli una cartella in Download come origine o destinazione.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSNetworkVolumesUsageDescription = "Serve solo se scegli un volume di rete come origine o destinazione.";
+				INFOPLIST_KEY_NSRemovableVolumesUsageDescription = "Serve per leggere e scrivere sui dischi esterni che scegli come origine e destinazione.";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.worldtravelin360.SSDCopier;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9D908D8792E5642B2623649E /* Build configuration list for PBXProject "SSDCopier" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E90355B091DE60836B9EB630 /* Debug */,
+				F45E008F885674FC524C8F02 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F707ED8CFBC457F7F618ECA6 /* Build configuration list for PBXNativeTarget "SSDCopier" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE00C0879F7527FA9476B8E3 /* Debug */,
+				17AD4E1B8D0A311E311FC4D7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}
