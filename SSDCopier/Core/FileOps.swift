@@ -63,10 +63,18 @@ enum FileOps {
 
     // MARK: - Stat
 
-    static func lstat(_ path: String) -> stat? {
+    /// Deliberately *not* called `lstat`: a static member with the same name as the C function
+    /// forces every call site to disambiguate against the module.
+    static func fileInfo(_ path: String) -> stat? {
         var info = stat()
-        guard Darwin.lstat(path, &info) == 0 else { return nil }
+        guard lstat(path, &info) == 0 else { return nil }
         return info
+    }
+
+    /// `st_mode` is a `mode_t` (UInt16) while the `S_IF*` constants import as `Int32`, so the
+    /// comparison only type-checks once both sides are converted explicitly.
+    static func isType(_ info: stat, _ mask: Int32) -> Bool {
+        (info.st_mode & mode_t(S_IFMT)) == mode_t(mask)
     }
 
     static func modificationDate(_ info: stat) -> TimeInterval {
@@ -80,7 +88,7 @@ enum FileOps {
         let code = errno
         if code == EEXIST {
             var info = stat()
-            if Darwin.stat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR { return }
+            if stat(path, &info) == 0, isType(info, S_IFDIR) { return }
         }
         throw FileOpError.makeDirectory(path: path, errno: code)
     }
@@ -89,7 +97,10 @@ enum FileOps {
 
     static func readSymlink(at path: String) throws -> String {
         var buffer = [CChar](repeating: 0, count: Int(PATH_MAX) + 1)
-        let length = readlink(path, &buffer, buffer.count - 1)
+        // The capacity has to be read *before* the call: passing `&buffer` and `buffer.count` in the
+        // same expression is an exclusivity violation that Swift rejects at compile time.
+        let capacity = buffer.count - 1
+        let length = readlink(path, &buffer, capacity)
         guard length >= 0 else { throw FileOpError.read(path: path, errno: errno) }
         buffer[length] = 0
         return String(cString: buffer)
@@ -205,10 +216,17 @@ enum FileOps {
 
     // MARK: - Metadata
 
+    /// `COPYFILE_METADATA` and `COPYFILE_NOFOLLOW` are compound macros built from other macros,
+    /// which Swift's C importer does not always expose. Spelled out from `copyfile.h`:
+    ///   COPYFILE_ACL (1<<0) | COPYFILE_STAT (1<<1) | COPYFILE_XATTR (1<<2) = 0x7
+    private static let metadataFlags: copyfile_flags_t = 0x0000_0007
+    ///   COPYFILE_NOFOLLOW_SRC (1<<18) | COPYFILE_NOFOLLOW_DST (1<<19) = 0xC0000
+    private static let noFollowFlags: copyfile_flags_t = 0x000C_0000
+
     /// Permissions, ACLs, extended attributes (resource forks included) and timestamps.
     /// Applied *after* the data so the destination's mtime reflects the source, not the copy.
     static func copyMetadata(from source: String, to destination: String) throws {
-        let flags = copyfile_flags_t(COPYFILE_METADATA | COPYFILE_NOFOLLOW)
+        let flags = metadataFlags | noFollowFlags
         if copyfile(source, destination, nil, flags) == 0 { return }
         let code = errno
 
@@ -220,9 +238,9 @@ enum FileOps {
 
     @discardableResult
     static func applyBasicMetadata(from source: String, to destination: String) -> Bool {
-        guard let info = lstat(source) else { return false }
+        guard let info = fileInfo(source) else { return false }
         var ok = true
-        if (info.st_mode & S_IFMT) != S_IFLNK {
+        if !isType(info, S_IFLNK) {
             ok = chmod(destination, info.st_mode & 0o7777) == 0 && ok
         }
         var times = [info.st_atimespec, info.st_mtimespec]
@@ -265,8 +283,8 @@ enum FileOps {
 extension URL {
     /// Filesystem representation as a `String`, safe for the POSIX calls above.
     var fsPath: String {
-        withUnsafeFileSystemRepresentation { pointer in
-            guard let pointer else { return path }
+        withUnsafeFileSystemRepresentation { (pointer: UnsafePointer<CChar>?) -> String in
+            guard let pointer else { return self.path }
             return String(cString: pointer)
         }
     }

@@ -381,10 +381,10 @@ final class TransferEngine: @unchecked Sendable {
     }
 
     private func isIdentical(entry: WalkEntry, destination: String) -> Bool {
-        guard let destinationInfo = FileOps.lstat(destination),
-              (destinationInfo.st_mode & S_IFMT) == S_IFREG,
+        guard let destinationInfo = FileOps.fileInfo(destination),
+              FileOps.isType(destinationInfo, S_IFREG),
               Int64(destinationInfo.st_size) == entry.size,
-              let sourceInfo = FileOps.lstat(entry.sourcePath)
+              let sourceInfo = FileOps.fileInfo(entry.sourcePath)
         else { return false }
 
         // One second of tolerance: FAT/ExFAT store timestamps at 2 s granularity.
@@ -392,7 +392,7 @@ final class TransferEngine: @unchecked Sendable {
     }
 
     private func hardLinkKey(for path: String) -> String? {
-        guard let info = FileOps.lstat(path) else { return nil }
+        guard let info = FileOps.fileInfo(path) else { return nil }
         return "\(info.st_dev):\(info.st_ino)"
     }
 
@@ -467,7 +467,7 @@ final class TransferEngine: @unchecked Sendable {
         mutate { $0.currentItem = entry.relativePath }
 
         do {
-            guard let destinationInfo = FileOps.lstat(item.destinationPath) else {
+            guard let destinationInfo = FileOps.fileInfo(item.destinationPath) else {
                 throw FileOpError.missingAtDestination(path: entry.relativePath)
             }
             let destinationSize = Int64(destinationInfo.st_size)
@@ -482,7 +482,7 @@ final class TransferEngine: @unchecked Sendable {
                 break
 
             case .quick:
-                if request.options.preserveMetadata, let sourceInfo = FileOps.lstat(entry.sourcePath) {
+                if request.options.preserveMetadata, let sourceInfo = FileOps.fileInfo(entry.sourcePath) {
                     let delta = abs(FileOps.modificationDate(sourceInfo) - FileOps.modificationDate(destinationInfo))
                     if delta > 2.0 {
                         throw FileOpError.dateMismatch(path: entry.relativePath)
