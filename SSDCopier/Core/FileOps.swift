@@ -80,7 +80,14 @@ enum FileOps {
         let code = errno
         if code == EEXIST {
             var info = stat()
-            if Darwin.stat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR { return }
+            // Unqualified on purpose. In Darwin, `stat` names both the struct and
+            // the function, and module-qualified lookup resolves to the *type*:
+            // `Darwin.stat(path, &info)` becomes `stat.init(path, &info)`, whose
+            // init takes no arguments, and the result is a `stat` being compared
+            // to 0. Unqualified, the arguments select the function.
+            // (`Darwin.lstat` above is fine — no type shares that name, and the
+            // qualification is needed there to avoid recursing into FileOps.lstat.)
+            if stat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR { return }
         }
         throw FileOpError.makeDirectory(path: path, errno: code)
     }
