@@ -71,10 +71,15 @@ enum FileOps {
         return info
     }
 
-    /// Masks off the file-type bits of `st_mode`. The `S_IF*` constants import as `mode_t`,
-    /// the same type as `st_mode` itself, so no conversion is involved.
-    static func isType(_ info: stat, _ mask: mode_t) -> Bool {
-        (info.st_mode & S_IFMT) == mask
+    /// Masks off the file-type bits of `st_mode`.
+    ///
+    /// The two halves of that comparison are not the same type: `st_mode` is
+    /// `mode_t` (`UInt16`), while the `S_IF*` constants are plain C integer
+    /// macros and import as `Int32`. Swift will not mix them, so `st_mode` is
+    /// widened once here and the mask stays `Int32` — which is what every call
+    /// site already passes.
+    static func isType(_ info: stat, _ mask: Int32) -> Bool {
+        (Int32(info.st_mode) & S_IFMT) == mask
     }
 
     static func modificationDate(_ info: stat) -> TimeInterval {
