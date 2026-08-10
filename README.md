@@ -70,9 +70,14 @@ Poi in Xcode: seleziona il target **SSDCopier** → **Signing & Capabilities** �
 Da riga di comando:
 
 ```bash
-./scripts/build.sh                     # build Debug
-./scripts/build.sh Release             # build Release
+./scripts/build.sh                          # Debug   → ./dist/SSDCopier.app
+./scripts/build.sh Release                  # Release → ./dist/SSDCopier.app
+OUTPUT_DIR=~/Developer ./scripts/build.sh   # → ~/Developer/SSDCopier.app
 ```
+
+Lo script firma **ad-hoc**: l'app parte su quel Mac e riceve i suoi entitlements, quindi la
+sandbox si comporta come in produzione. Non è distribuibile ad altri: per quello serve una build
+firmata col tuo Team da Xcode, seguita dalla notarizzazione.
 
 ### Rigenerare il progetto Xcode
 
