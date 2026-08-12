@@ -68,6 +68,15 @@ struct ProgressCalculator {
     private let fallbackCopyRate: Double = 200 * 1024 * 1024
     /// Rough files/s for the metadata-only verification pass.
     private let fallbackQuickVerifyRate: Double = 1500
+    /// Below 1 KB/s a measurement is noise, not a drive speed: dividing by it overflows.
+    private let minimumByteRate: Double = 1024
+    private let minimumFileRate: Double = 0.1
+
+    /// A rate is usable as a divisor only if it is finite and not vanishingly small.
+    private func usable(_ rate: Double, fallback: Double, floor: Double) -> Double {
+        guard rate.isFinite, rate >= floor else { return fallback }
+        return rate
+    }
 
     mutating func reset() {
         copyRate.reset()
@@ -80,13 +89,23 @@ struct ProgressCalculator {
                          verification: VerificationMode,
                          mode: TransferMode,
                          elapsed: TimeInterval) -> TransferProgress {
-        copyRate.record(total: Double(counters.processedBytes), at: elapsed)
-        switch verification {
-        case .checksum:
-            verifyRate.record(total: Double(counters.verifiedBytes), at: elapsed)
-        case .quick:
-            quickVerifyRate.record(total: Double(counters.verifiedFiles), at: elapsed)
-        case .none:
+        // Each estimator is fed only while its own phase runs. An idle estimator keeps averaging
+        // in zeros and decays exponentially towards zero; since it is then used as a divisor, a
+        // decayed rate turns a cost into `.infinity`, and `infinity / infinity` is NaN. That NaN
+        // reached `Fmt.percent`, where `Int(_: Double)` traps and kills the process.
+        switch counters.phase {
+        case .copying:
+            copyRate.record(total: Double(counters.processedBytes), at: elapsed)
+        case .verifying:
+            switch verification {
+            case .checksum:
+                verifyRate.record(total: Double(counters.verifiedBytes), at: elapsed)
+            case .quick:
+                quickVerifyRate.record(total: Double(counters.verifiedFiles), at: elapsed)
+            case .none:
+                break
+            }
+        default:
             break
         }
 
@@ -96,11 +115,13 @@ struct ProgressCalculator {
         progress.copyRate = copyRate.rate
         progress.verifyRate = verifyRate.rate
 
-        let effectiveCopyRate = copyRate.hasEstimate ? copyRate.rate : fallbackCopyRate
-        let effectiveVerifyRate = verifyRate.hasEstimate
-            ? verifyRate.rate
-            : effectiveCopyRate * assumedVerifyToCopyRatio
-        let effectiveQuickRate = quickVerifyRate.hasEstimate ? quickVerifyRate.rate : fallbackQuickVerifyRate
+        let effectiveCopyRate = usable(copyRate.rate, fallback: fallbackCopyRate, floor: minimumByteRate)
+        let effectiveVerifyRate = usable(verifyRate.rate,
+                                         fallback: effectiveCopyRate * assumedVerifyToCopyRatio,
+                                         floor: minimumByteRate)
+        let effectiveQuickRate = usable(quickVerifyRate.rate,
+                                        fallback: fallbackQuickVerifyRate,
+                                        floor: minimumFileRate)
 
         // Total cost of each phase, expressed in seconds. A verify-only run has no copy phase,
         // so charging it for one would peg the bar near zero for the whole job.
@@ -119,19 +140,19 @@ struct ProgressCalculator {
         }
 
         let totalCost = copyCost + verifyCost
-        if totalCost > 0 {
-            progress.overallFraction = min(max((copyDone + verifyDone) / totalCost, 0), 1)
+        if totalCost > 0, totalCost.isFinite {
+            progress.overallFraction = Fmt.clampFraction((copyDone + verifyDone) / totalCost)
         }
 
         switch counters.phase {
         case .copying:
             progress.phaseFraction = counters.totalBytes > 0
-                ? min(max(Double(counters.processedBytes) / Double(counters.totalBytes), 0), 1)
+                ? Fmt.clampFraction(Double(counters.processedBytes) / Double(counters.totalBytes))
                 : 0
         case .verifying:
             let done = Double(counters.verifiedFiles)
             let total = Double(counters.totalFiles)
-            progress.phaseFraction = total > 0 ? min(max(done / total, 0), 1) : 0
+            progress.phaseFraction = total > 0 ? Fmt.clampFraction(done / total) : 0
         case .completed:
             progress.phaseFraction = 1
             progress.overallFraction = 1

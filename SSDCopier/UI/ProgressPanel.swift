@@ -175,6 +175,10 @@ struct ProgressRing: View {
 
     @State private var spin = false
 
+    /// A NaN reaching `trim(from:to:)` produces an invalid CoreGraphics path, so the value is
+    /// sanitised here too rather than trusting the caller.
+    private var safeFraction: Double { Fmt.clampFraction(fraction) }
+
     private var gradient: AngularGradient {
         AngularGradient(colors: paused ? [.orange, .yellow] : [.blue, .cyan, .green],
                         center: .center)
@@ -194,10 +198,10 @@ struct ProgressRing: View {
                     .onAppear { spin = true }
             } else {
                 Circle()
-                    .trim(from: 0, to: max(0.002, min(fraction, 1)))
+                    .trim(from: 0, to: max(0.002, safeFraction))
                     .stroke(gradient, style: StrokeStyle(lineWidth: 16, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeOut(duration: 0.35), value: fraction)
+                    .animation(.easeOut(duration: 0.35), value: safeFraction)
             }
 
             VStack(spacing: 2) {
@@ -206,11 +210,11 @@ struct ProgressRing: View {
                         .font(.system(size: 28, weight: .medium))
                         .foregroundStyle(.secondary)
                 } else {
-                    Text(Fmt.percent(fraction))
+                    Text(Fmt.percent(safeFraction))
                         .font(.system(size: 36, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                        .animation(.easeOut(duration: 0.25), value: fraction)
+                        .animation(.easeOut(duration: 0.25), value: safeFraction)
                 }
                 Text(phaseTitle)
                     .font(.caption)
@@ -221,6 +225,6 @@ struct ProgressRing: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(phaseTitle)
-        .accessibilityValue(indeterminate ? L("progress.inProgress") : Fmt.percent(fraction))
+        .accessibilityValue(indeterminate ? L("progress.inProgress") : Fmt.percent(safeFraction))
     }
 }

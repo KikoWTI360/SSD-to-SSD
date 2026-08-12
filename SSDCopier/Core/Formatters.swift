@@ -14,11 +14,24 @@ enum Fmt {
 
     static func rate(_ bytesPerSecond: Double) -> String {
         guard bytesPerSecond.isFinite, bytesPerSecond > 0 else { return "—" }
-        return byteFormatter.string(fromByteCount: Int64(bytesPerSecond)) + "/s"
+        // `Int64(_: Double)` traps above `Int64.max`, so cap before converting.
+        let capped = min(bytesPerSecond, 1e15)
+        return byteFormatter.string(fromByteCount: Int64(capped)) + "/s"
+    }
+
+    /// Forces a value into 0…1, mapping NaN to 0.
+    ///
+    /// This exists because `Int(_: Double)` **traps** on NaN and infinity — it aborts the process
+    /// rather than returning something wrong. Clamping alone is not enough: `min(max(nan, 0), 1)`
+    /// is still NaN, since every comparison against NaN is false. Any fraction that reaches a
+    /// formatter or a SwiftUI shape has to pass through here first.
+    static func clampFraction(_ value: Double) -> Double {
+        guard !value.isNaN else { return 0 }
+        return min(max(value, 0), 1)
     }
 
     static func percent(_ fraction: Double) -> String {
-        let clamped = min(max(fraction, 0), 1)
+        let clamped = clampFraction(fraction)
         return "\(Int((clamped * 100).rounded()))%"
     }
 
