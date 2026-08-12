@@ -2,9 +2,8 @@ import Foundation
 
 /// Throughput estimator over a sliding time window, with exponential smoothing on top.
 ///
-/// A plain "total bytes / elapsed" average is useless for an ETA: it reacts far too slowly when the
-/// drive changes speed (SLC cache exhaustion, a run of tiny files, thermal throttling). The sliding
-/// window keeps the estimate responsive, the EWMA keeps the label from jittering every tick.
+/// Used for the **speed readout only**. A responsive number is what the user wants to see there,
+/// and its jitter is harmless — unlike in the progress bar, where it used to be poison.
 struct RateEstimator {
     private struct Sample {
         let time: TimeInterval
@@ -23,6 +22,7 @@ struct RateEstimator {
 
     /// Feed the running total (bytes or files). Deltas are derived internally.
     mutating func record(total: Double, at time: TimeInterval) {
+        guard total.isFinite, time.isFinite else { return }
         samples.append(Sample(time: time, value: total))
 
         let cutoff = time - window
@@ -37,6 +37,7 @@ struct RateEstimator {
         guard dt >= 0.5, dv >= 0 else { return }
 
         let instant = dv / dt
+        guard instant.isFinite else { return }
         smoothed = smoothed == 0 ? instant : smoothed * (1 - smoothing) + instant * smoothing
     }
 
@@ -53,58 +54,69 @@ struct RateEstimator {
 
 /// Turns raw counters into the ETA and the two progress fractions shown by the loader.
 ///
-/// Copy and verify move at different speeds, so a byte-based bar would visibly stall when the
-/// verification pass starts. Instead both phases are converted to *estimated seconds* and the
-/// overall bar shows the fraction of total time consumed.
+/// Two rules earned the hard way:
+///
+/// 1. **The progress bar must not depend on speed.** The first version weighted each phase by
+///    `bytes / current rate`, so the rate appeared in both the numerator and the denominator
+///    without cancelling: when the drive slowed down the percentage went *backwards*. Phase
+///    weights are now fixed constants, and the result is additionally clamped to a high-water
+///    mark, so the bar can only ever move forward.
+///
+/// 2. **The ETA uses the running average of the current phase, not the sliding window.** A
+///    momentary dip in a 6-second window once turned a 20-hour estimate into 866 hours. A
+///    cumulative average converges instead of spiking.
 struct ProgressCalculator {
+
+    // Sliding-window estimators, for the speed readout only.
     private var copyRate = RateEstimator()
     private var verifyRate = RateEstimator()
-    private var quickVerifyRate = RateEstimator()
+
+    // Phase tracking, for the ETA's cumulative average.
+    private var phase: TransferPhase = .idle
+    private var phaseStartElapsed: TimeInterval = 0
+    private var phaseStartBytes: Double = 0
+    private var phaseStartFiles: Double = 0
+
     private var smoothedETA: Double?
+    /// A progress bar that goes backwards is worse than one that is slightly wrong.
+    private var highWaterFraction: Double = 0
 
-    /// Assumed read/write ratio before either phase has produced a measurement.
+    /// Cost of verifying a byte relative to writing it. Verification reads both sides without
+    /// writing, which in practice lands close to the cost of the copy itself.
+    private let checksumWeight = 1.0
+    /// The quick pass only stats files: nearly free next to moving the data.
+    private let quickWeight = 0.02
+    /// Assumed read/write ratio, used to price the verify phase before it has begun.
     private let assumedVerifyToCopyRatio = 1.4
-    /// Fallback throughput (200 MB/s) used only to weight the bar before any sample exists.
-    private let fallbackCopyRate: Double = 200 * 1024 * 1024
-    /// Rough files/s for the metadata-only verification pass.
-    private let fallbackQuickVerifyRate: Double = 1500
-    /// Below 1 KB/s a measurement is noise, not a drive speed: dividing by it overflows.
-    private let minimumByteRate: Double = 1024
-    private let minimumFileRate: Double = 0.1
-
-    /// A rate is usable as a divisor only if it is finite and not vanishingly small.
-    private func usable(_ rate: Double, fallback: Double, floor: Double) -> Double {
-        guard rate.isFinite, rate >= floor else { return fallback }
-        return rate
-    }
+    /// An average needs a couple of seconds of history before it means anything.
+    private let minimumPhaseDuration: TimeInterval = 2
 
     mutating func reset() {
         copyRate.reset()
         verifyRate.reset()
-        quickVerifyRate.reset()
+        phase = .idle
+        phaseStartElapsed = 0
+        phaseStartBytes = 0
+        phaseStartFiles = 0
         smoothedETA = nil
+        highWaterFraction = 0
     }
 
     mutating func update(counters: TransferCounters,
                          verification: VerificationMode,
                          mode: TransferMode,
                          elapsed: TimeInterval) -> TransferProgress {
-        // Each estimator is fed only while its own phase runs. An idle estimator keeps averaging
-        // in zeros and decays exponentially towards zero; since it is then used as a divisor, a
-        // decayed rate turns a cost into `.infinity`, and `infinity / infinity` is NaN. That NaN
-        // reached `Fmt.percent`, where `Int(_: Double)` traps and kills the process.
+        trackPhase(counters: counters, elapsed: elapsed)
+
+        // Each estimator is fed only while its own phase runs. An idle estimator would keep
+        // averaging in zeros and decay towards zero, and a decayed rate used as a divisor
+        // overflows to infinity — which is how a NaN once reached `Fmt.percent` and killed
+        // the process.
         switch counters.phase {
         case .copying:
             copyRate.record(total: Double(counters.processedBytes), at: elapsed)
         case .verifying:
-            switch verification {
-            case .checksum:
-                verifyRate.record(total: Double(counters.verifiedBytes), at: elapsed)
-            case .quick:
-                quickVerifyRate.record(total: Double(counters.verifiedFiles), at: elapsed)
-            case .none:
-                break
-            }
+            verifyRate.record(total: Double(counters.verifiedBytes), at: elapsed)
         default:
             break
         }
@@ -114,67 +126,92 @@ struct ProgressCalculator {
         progress.elapsed = elapsed
         progress.copyRate = copyRate.rate
         progress.verifyRate = verifyRate.rate
-
-        let effectiveCopyRate = usable(copyRate.rate, fallback: fallbackCopyRate, floor: minimumByteRate)
-        let effectiveVerifyRate = usable(verifyRate.rate,
-                                         fallback: effectiveCopyRate * assumedVerifyToCopyRatio,
-                                         floor: minimumByteRate)
-        let effectiveQuickRate = usable(quickVerifyRate.rate,
-                                        fallback: fallbackQuickVerifyRate,
-                                        floor: minimumFileRate)
-
-        // Total cost of each phase, expressed in seconds. A verify-only run has no copy phase,
-        // so charging it for one would peg the bar near zero for the whole job.
-        let copyCost = mode.writesToDestination ? Double(counters.totalBytes) / effectiveCopyRate : 0
-        let verifyCost: Double = switch verification {
-        case .none: 0
-        case .quick: Double(counters.totalFiles) / effectiveQuickRate
-        case .checksum: Double(counters.totalBytes) / effectiveVerifyRate
-        }
-
-        let copyDone = mode.writesToDestination ? Double(counters.processedBytes) / effectiveCopyRate : 0
-        let verifyDone: Double = switch verification {
-        case .none: 0
-        case .quick: Double(counters.verifiedFiles) / effectiveQuickRate
-        case .checksum: Double(counters.verifiedBytes) / effectiveVerifyRate
-        }
-
-        let totalCost = copyCost + verifyCost
-        if totalCost > 0, totalCost.isFinite {
-            progress.overallFraction = Fmt.clampFraction((copyDone + verifyDone) / totalCost)
-        }
-
-        switch counters.phase {
-        case .copying:
-            progress.phaseFraction = counters.totalBytes > 0
-                ? Fmt.clampFraction(Double(counters.processedBytes) / Double(counters.totalBytes))
-                : 0
-        case .verifying:
-            let done = Double(counters.verifiedFiles)
-            let total = Double(counters.totalFiles)
-            progress.phaseFraction = total > 0 ? Fmt.clampFraction(done / total) : 0
-        case .completed:
-            progress.phaseFraction = 1
-            progress.overallFraction = 1
-        default:
-            progress.phaseFraction = progress.overallFraction
-        }
-
+        progress.overallFraction = overallFraction(counters: counters,
+                                                   verification: verification,
+                                                   mode: mode)
+        progress.phaseFraction = phaseFraction(counters: counters, overall: progress.overallFraction)
         progress.eta = estimateRemaining(counters: counters,
                                          verification: verification,
                                          mode: mode,
-                                         copyBytesPerSecond: effectiveCopyRate,
-                                         verifyBytesPerSecond: effectiveVerifyRate,
-                                         quickFilesPerSecond: effectiveQuickRate)
+                                         elapsed: elapsed)
         return progress
     }
+
+    // MARK: - Phase tracking
+
+    private mutating func trackPhase(counters: TransferCounters, elapsed: TimeInterval) {
+        guard counters.phase != phase else { return }
+        phase = counters.phase
+        phaseStartElapsed = elapsed
+        phaseStartBytes = counters.phase == .verifying
+            ? Double(counters.verifiedBytes)
+            : Double(counters.processedBytes)
+        phaseStartFiles = Double(counters.verifiedFiles)
+    }
+
+    // MARK: - Progress
+
+    /// Fixed weights, so the fraction depends only on how much work is done — never on how fast
+    /// it is going.
+    private mutating func overallFraction(counters: TransferCounters,
+                                          verification: VerificationMode,
+                                          mode: TransferMode) -> Double {
+        let totalBytes = Double(counters.totalBytes)
+        let totalFiles = Double(counters.totalFiles)
+
+        let copyWork = mode.writesToDestination ? totalBytes : 0
+        let verifyWork: Double = switch verification {
+        case .none: 0
+        case .quick: totalBytes * quickWeight
+        case .checksum: totalBytes * checksumWeight
+        }
+
+        let copyDone = mode.writesToDestination ? Double(counters.processedBytes) : 0
+        let verifyDone: Double = switch verification {
+        case .none:
+            0
+        case .quick:
+            // The quick pass is measured in files, so scale its file progress onto its weight.
+            totalFiles > 0 ? Double(counters.verifiedFiles) / totalFiles * verifyWork : 0
+        case .checksum:
+            Double(counters.verifiedBytes) * checksumWeight
+        }
+
+        let totalWork = copyWork + verifyWork
+        guard totalWork > 0, totalWork.isFinite else { return highWaterFraction }
+
+        let raw = Fmt.clampFraction((copyDone + verifyDone) / totalWork)
+        highWaterFraction = max(highWaterFraction, raw)
+
+        if counters.phase == .completed {
+            highWaterFraction = 1
+        }
+        return highWaterFraction
+    }
+
+    private func phaseFraction(counters: TransferCounters, overall: Double) -> Double {
+        switch counters.phase {
+        case .copying:
+            return counters.totalBytes > 0
+                ? Fmt.clampFraction(Double(counters.processedBytes) / Double(counters.totalBytes))
+                : 0
+        case .verifying:
+            return counters.totalFiles > 0
+                ? Fmt.clampFraction(Double(counters.verifiedFiles) / Double(counters.totalFiles))
+                : 0
+        case .completed:
+            return 1
+        default:
+            return overall
+        }
+    }
+
+    // MARK: - ETA
 
     private mutating func estimateRemaining(counters: TransferCounters,
                                             verification: VerificationMode,
                                             mode: TransferMode,
-                                            copyBytesPerSecond: Double,
-                                            verifyBytesPerSecond: Double,
-                                            quickFilesPerSecond: Double) -> TimeInterval? {
+                                            elapsed: TimeInterval) -> TimeInterval? {
         switch counters.phase {
         case .completed, .cancelled, .failed:
             return 0
@@ -185,30 +222,51 @@ struct ProgressCalculator {
             break
         }
 
-        // Nothing measured yet — don't show a wildly wrong first guess.
-        guard copyRate.hasEstimate || counters.phase == .verifying else { return nil }
+        let inPhase = elapsed - phaseStartElapsed
+        guard inPhase >= minimumPhaseDuration else { return smoothedETA }
 
-        let remainingCopyBytes = mode.writesToDestination
-            ? max(0, counters.totalBytes - counters.processedBytes)
-            : 0
-        let remainingCopy = Double(remainingCopyBytes) / max(copyBytesPerSecond, 1)
+        let remaining: Double
+        switch counters.phase {
+        case .verifying:
+            let done = Double(counters.verifiedBytes) - phaseStartBytes
+            let doneFiles = Double(counters.verifiedFiles) - phaseStartFiles
+            switch verification {
+            case .none:
+                remaining = 0
+            case .quick:
+                guard doneFiles > 0 else { return smoothedETA }
+                let filesPerSecond = doneFiles / inPhase
+                remaining = Double(max(0, counters.totalFiles - counters.verifiedFiles)) / filesPerSecond
+            case .checksum:
+                guard done > 0 else { return smoothedETA }
+                let bytesPerSecond = done / inPhase
+                remaining = Double(max(0, counters.totalBytes - counters.verifiedBytes)) / bytesPerSecond
+            }
 
-        let remainingVerify: Double = switch verification {
-        case .none:
-            0
-        case .quick:
-            Double(max(0, counters.totalFiles - counters.verifiedFiles)) / max(quickFilesPerSecond, 1)
-        case .checksum:
-            Double(max(0, counters.totalBytes - counters.verifiedBytes)) / max(verifyBytesPerSecond, 1)
+        default:
+            // Still copying: price the remaining bytes, then add the verification still to come.
+            let done = Double(counters.processedBytes) - phaseStartBytes
+            guard done > 0 else { return smoothedETA }
+            let bytesPerSecond = done / inPhase
+            let remainingCopy = Double(max(0, counters.totalBytes - counters.processedBytes)) / bytesPerSecond
+            let verifyRateGuess = bytesPerSecond * assumedVerifyToCopyRatio
+            let remainingVerify: Double = switch verification {
+            case .none: 0
+            case .quick: Double(counters.totalBytes) * quickWeight / bytesPerSecond
+            case .checksum: Double(counters.totalBytes) / verifyRateGuess
+            }
+            remaining = remainingCopy + remainingVerify
         }
 
-        let raw = remainingCopy + remainingVerify
-        guard raw.isFinite else { return nil }
+        guard remaining.isFinite, remaining >= 0 else { return smoothedETA }
 
         // Smooth the ETA itself: users read this number continuously and hate it bouncing.
-        let previous = smoothedETA ?? raw
-        // Let it fall freely, damp it on the way up — a rising ETA is usually a transient stall.
-        let smoothed = raw < previous ? previous * 0.6 + raw * 0.4 : previous * 0.85 + raw * 0.15
+        // It may fall freely but is damped on the way up, because a rising estimate is usually a
+        // transient stall rather than a real change of pace.
+        let previous = smoothedETA ?? remaining
+        let smoothed = remaining < previous
+            ? previous * 0.6 + remaining * 0.4
+            : previous * 0.85 + remaining * 0.15
         smoothedETA = smoothed
         return smoothed
     }

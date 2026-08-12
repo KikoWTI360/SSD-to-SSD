@@ -70,8 +70,13 @@ enum VolumeScanner {
         guard values.volumeIsBrowsable != false else { return nil }
 
         let name = values.volumeLocalizedName ?? values.volumeName ?? url.lastPathComponent
-        // `…ForImportantUsage` accounts for purgeable space and is the honest number for a big copy.
-        let available = values.volumeAvailableCapacityForImportantUsage ?? Int64(values.volumeAvailableCapacity ?? 0)
+        // `…ForImportantUsage` accounts for purgeable space and is the honest number for a big
+        // copy — but it is an APFS/HFS+ notion. On exFAT, NTFS and FAT it comes back as *0*
+        // rather than nil, which made every non-Apple drive look completely full: no free space
+        // in the card, and a bogus "not enough space" warning on every transfer.
+        let importantUsage = values.volumeAvailableCapacityForImportantUsage ?? 0
+        let plainAvailable = Int64(values.volumeAvailableCapacity ?? 0)
+        let available = importantUsage > 0 ? importantUsage : plainAvailable
 
         return VolumeInfo(
             url: url,
