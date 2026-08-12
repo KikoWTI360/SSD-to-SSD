@@ -125,6 +125,14 @@ extension Loc {
         "action.refreshDisks": "Aggiorna dischi",
         "action.refreshDisks.help": "Rileggi l'elenco dei volumi collegati",
         "action.swap.help": "Inverti origine e destinazione",
+        "action.verifyOnly": "Verifica soltanto",
+        "action.verifyOnly.help": "Confronta i file già presenti sulla destinazione, senza ricopiarli. Serve quando una copia è stata interrotta prima della verifica.",
+        "mode.copyAndVerify.title": "Copia e verifica",
+        "mode.verifyOnly.title": "Solo verifica",
+        "report.mode": "Modalità",
+        "report.verifyHeaderStats": "%@ verificati in %@ · media %@",
+        "setup.nothingToVerify": "Sulla destinazione non c'è nessuna copia da verificare.",
+        "status.readyVerify": "Pronto: verifica %@ della copia già presente.",
 
         // Dischi
         "disk.source": "Origine",
@@ -317,6 +325,14 @@ extension Loc {
         "action.refreshDisks": "Refresh drives",
         "action.refreshDisks.help": "Re-read the list of connected volumes",
         "action.swap.help": "Swap source and destination",
+        "action.verifyOnly": "Verify only",
+        "action.verifyOnly.help": "Compares the files already on the destination without copying them again. Use it when a copy was interrupted before verification.",
+        "mode.copyAndVerify.title": "Copy and verify",
+        "mode.verifyOnly.title": "Verify only",
+        "report.mode": "Mode",
+        "report.verifyHeaderStats": "%@ verified in %@ · %@ average",
+        "setup.nothingToVerify": "There is no copy on the destination to verify.",
+        "status.readyVerify": "Ready: %@ verification of the copy already there.",
 
         // Drives
         "disk.source": "Source",

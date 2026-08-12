@@ -9,6 +9,7 @@ final class TransferEngine: @unchecked Sendable {
         var source: URL
         var destination: URL
         var options: TransferOptions
+        var mode: TransferMode = .copyAndVerify
     }
 
     private enum EntryKind {
@@ -106,7 +107,9 @@ final class TransferEngine: @unchecked Sendable {
         setPhase(.preparing)
         do {
             try validate()
-            try FileManager.default.createDirectory(at: destinationRoot, withIntermediateDirectories: true)
+            if request.mode.writesToDestination {
+                try FileManager.default.createDirectory(at: destinationRoot, withIntermediateDirectories: true)
+            }
         } catch {
             return finish(with: error.localizedDescription)
         }
@@ -114,15 +117,18 @@ final class TransferEngine: @unchecked Sendable {
         setPhase(.scanning)
         scanSource()
         if gate.isCancelled { return finish(cancelled: true) }
-        checkFreeSpace()
-        if let fatalMessage { return finish(with: fatalMessage) }
 
-        setPhase(.copying)
-        runCopyPass()
-        if gate.isCancelled { return finish(cancelled: true) }
+        if request.mode.writesToDestination {
+            checkFreeSpace()
+            if let fatalMessage { return finish(with: fatalMessage) }
 
-        setPhase(.finalizing)
-        applyDirectoryMetadata()
+            setPhase(.copying)
+            runCopyPass()
+            if gate.isCancelled { return finish(cancelled: true) }
+
+            setPhase(.finalizing)
+            applyDirectoryMetadata()
+        }
 
         if request.options.verification != .none {
             setPhase(.verifying)
@@ -158,6 +164,19 @@ final class TransferEngine: @unchecked Sendable {
         if isSubpath(source, of: destination) {
             throw TransferSetupError.message(L("setup.sourceInsideDestination"))
         }
+
+        guard request.mode.writesToDestination else {
+            // Verification only reads, so a read-only destination is fine. What it does need is
+            // an existing copy to compare against.
+            guard fm.fileExists(atPath: destinationRoot.path, isDirectory: &isDir), isDir.boolValue,
+                  let contents = try? fm.contentsOfDirectory(atPath: destinationRoot.path),
+                  !contents.isEmpty
+            else {
+                throw TransferSetupError.message(L("setup.nothingToVerify"))
+            }
+            return
+        }
+
         guard access(request.destination.fsPath, W_OK) == 0 else {
             throw TransferSetupError.message(L("setup.destinationReadOnly"))
         }
@@ -174,8 +193,15 @@ final class TransferEngine: @unchecked Sendable {
         guard needed > volume.availableCapacity else { return }
 
         let message = L("space.needed", Fmt.bytes(needed), Fmt.bytes(volume.availableCapacity))
-        if request.options.skipIdenticalFiles {
-            // Files already present will be skipped, so the copy may still fit.
+
+        // Comparing the whole source against free space is only meaningful for a first copy onto
+        // an empty destination. Re-running over an existing copy always "fails" this test — the
+        // data already sitting there is precisely what makes the free space look insufficient —
+        // so anything but an empty destination gets a warning and the transfer proceeds.
+        let destinationHasContent = (try? FileManager.default.contentsOfDirectory(atPath: destinationRoot.path))
+            .map { !$0.isEmpty } ?? false
+
+        if request.options.skipIdenticalFiles || destinationHasContent {
             record(issue: TransferIssue(path: request.destination.path,
                                         message: L("space.willSkip", message),
                                         severity: .warning))
@@ -678,6 +704,7 @@ final class TransferEngine: @unchecked Sendable {
         report.sourcePath = request.source.path
         report.destinationPath = destinationRoot.path
         report.verification = request.options.verification
+        report.mode = request.mode
         report.fatalMessage = fatal
         return report
     }

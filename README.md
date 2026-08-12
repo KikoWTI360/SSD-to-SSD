@@ -20,6 +20,7 @@ velocità e tempo rimanente calcolato**.
 | **Loader con ETA** | Anello di avanzamento, percentuale, velocità istantanea, tempo trascorso, file e byte processati, file corrente. Il tempo rimanente tiene conto sia della copia sia della verifica. |
 | **Controllo** | Pausa, ripresa e annullamento in qualsiasi momento; il Mac non va in stop durante il trasferimento. |
 | **Rapporto finale** | Riepilogo con file copiati/saltati/non riusciti, esiti della verifica ed elenco dei problemi. Esportabile in testo o copiabile negli appunti. |
+| **Sola verifica** | Il pulsante «Verifica soltanto» (⇧⌘↩) confronta una copia già presente senza riscrivere nulla. Serve quando un trasferimento si è interrotto dopo la copia ma prima della verifica. |
 | **Italiano e inglese** | Menu con il mappamondo in alto a destra: Sistema, Italiano o English. Il cambio è immediato, senza riavviare l'app, e la scelta viene ricordata. |
 
 ## Come è calcolato il tempo rimanente
@@ -173,7 +174,12 @@ SSDCopier/
 - La copia **unisce** l'origine nella destinazione: i file omonimi vengono sovrascritti, gli altri
   restano. Non è un mirror — non elimina dalla destinazione ciò che non esiste più nell'origine.
 - Con "Salta i file già presenti e identici" attivo, un trasferimento interrotto si riprende
-  semplicemente rilanciandolo: i file già copiati vengono saltati.
+  semplicemente rilanciandolo: i file già copiati vengono saltati. Se invece la copia era
+  completa e si è fermata durante la verifica, usa «Verifica soltanto»: non riscrive nulla.
+- Il controllo dello spazio libero confronta l'intera origine con lo spazio disponibile, quindi
+  è significativo solo alla prima copia su una destinazione vuota. Rilanciando su una copia
+  esistente il test fallirebbe sempre — sono proprio i dati già presenti a occupare lo spazio —
+  perciò in quel caso diventa un avviso e il trasferimento prosegue.
 - Il confronto per il salto usa dimensione + data di modifica, con 1 secondo di tolleranza
   (FAT/ExFAT registrano le date con granularità di 2 secondi).
 - I file sparsi vengono copiati espansi: la destinazione può occupare più spazio dell'origine.

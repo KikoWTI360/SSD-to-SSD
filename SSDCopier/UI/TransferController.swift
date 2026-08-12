@@ -43,6 +43,7 @@ final class TransferController {
     var alertMessage: String?
     var confirmation: Confirmation?
     var isPaused = false
+    private(set) var mode: TransferMode = .copyAndVerify
 
     // MARK: - Private
 
@@ -153,8 +154,16 @@ final class TransferController {
 
     // MARK: - Transfer lifecycle
 
-    func requestStart() {
+    func requestStart(mode: TransferMode = .copyAndVerify) {
         guard let source, let destination else { return }
+
+        // Verifying with verification turned off would do nothing at all. Switch the picker so
+        // the change is visible instead of silently overriding it behind the user's back.
+        if mode == .verifyOnly, options.verification == .none {
+            options.verification = .checksum
+            persistOptions()
+        }
+        self.mode = mode
 
         if source.url.standardizedFileURL == destination.url.standardizedFileURL {
             alertMessage = L("alert.samePath")
@@ -165,7 +174,8 @@ final class TransferController {
             alertMessage = L("alert.sameVolume", sourceVolume.name)
             return
         }
-        if destination.volume?.isReadOnly == true {
+        // Verification never writes, so a read-only destination is only a problem for a copy.
+        if mode.writesToDestination, destination.volume?.isReadOnly == true {
             alertMessage = L("alert.destinationReadOnly")
             return
         }
@@ -174,7 +184,7 @@ final class TransferController {
             ? destination.url.appendingPathComponent(source.url.lastPathComponent)
             : destination.url
 
-        if hasVisibleContent(at: target) {
+        if mode == .copyAndVerify, hasVisibleContent(at: target) {
             confirmation = Confirmation(
                 title: L("confirm.notEmpty.title"),
                 message: L("confirm.notEmpty.message", target.lastPathComponent),
@@ -212,7 +222,8 @@ final class TransferController {
 
         let engine = TransferEngine(request: .init(source: source.url,
                                                    destination: destination.url,
-                                                   options: options))
+                                                   options: options,
+                                                   mode: mode))
         self.engine = engine
 
         // The engine already hops to the main queue before calling back.
@@ -262,6 +273,7 @@ final class TransferController {
         let elapsed = Date().timeIntervalSince(startDate)
         progress = calculator.update(counters: engine.snapshot(),
                                      verification: options.verification,
+                                     mode: mode,
                                      elapsed: elapsed)
     }
 

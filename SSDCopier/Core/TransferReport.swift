@@ -54,6 +54,7 @@ struct TransferReport: Identifiable, Sendable {
     var sourcePath = ""
     var destinationPath = ""
     var verification: VerificationMode = .checksum
+    var mode: TransferMode = .copyAndVerify
     /// Set when the transfer aborted before finishing.
     var fatalMessage: String?
 
@@ -82,6 +83,7 @@ struct TransferReport: Identifiable, Sendable {
             (L("report.start"), formatter.string(from: startedAt)),
             (L("report.end"), formatter.string(from: finishedAt)),
             (L("report.duration"), Fmt.duration(duration)),
+            (L("report.mode"), mode.title),
             (L("report.verification"), verification.title),
             ("", ""),
             (L("report.folders"), Fmt.count(counters.totalDirectories)),

@@ -48,10 +48,7 @@ struct ReportSheet: View {
                         .font(.callout)
                         .foregroundStyle(.red)
                 } else {
-                    Text(L("report.headerStats",
-                           Fmt.bytes(report.counters.copiedBytes),
-                           Fmt.duration(report.duration),
-                           Fmt.rate(report.averageRate)))
+                    Text(headerStats)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -59,6 +56,23 @@ struct ReportSheet: View {
             Spacer(minLength: 0)
         }
         .padding(20)
+    }
+
+    /// A verify-only run copies nothing, so quoting "0 bytes copied" would be nonsense.
+    private var headerStats: String {
+        let duration = Fmt.duration(report.duration)
+        guard report.mode.writesToDestination else {
+            let read = Double(report.counters.verifiedBytes)
+            let rate = report.duration > 0 ? read / report.duration : 0
+            return L("report.verifyHeaderStats",
+                     Fmt.bytes(report.counters.verifiedBytes),
+                     duration,
+                     Fmt.rate(rate))
+        }
+        return L("report.headerStats",
+                 Fmt.bytes(report.counters.copiedBytes),
+                 duration,
+                 Fmt.rate(report.averageRate))
     }
 
     private var summary: some View {

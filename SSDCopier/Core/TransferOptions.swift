@@ -20,6 +20,21 @@ enum VerificationMode: String, CaseIterable, Identifiable, Codable, Sendable {
     }
 }
 
+/// What a run actually does. Not a persisted preference — it is chosen per run, by which
+/// button the user presses.
+enum TransferMode: String, CaseIterable, Identifiable, Codable, Sendable {
+    /// Scan, copy, then verify.
+    case copyAndVerify
+    /// Verify an existing copy without writing anything. Recovers from an interrupted transfer.
+    case verifyOnly
+
+    var id: String { rawValue }
+
+    var title: String { L("mode.\(rawValue).title") }
+
+    var writesToDestination: Bool { self == .copyAndVerify }
+}
+
 /// User-tunable knobs for a transfer. Persisted in `UserDefaults` between launches.
 struct TransferOptions: Codable, Equatable, Sendable {
     var verification: VerificationMode = .checksum

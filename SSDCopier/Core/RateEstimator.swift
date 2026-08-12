@@ -78,6 +78,7 @@ struct ProgressCalculator {
 
     mutating func update(counters: TransferCounters,
                          verification: VerificationMode,
+                         mode: TransferMode,
                          elapsed: TimeInterval) -> TransferProgress {
         copyRate.record(total: Double(counters.processedBytes), at: elapsed)
         switch verification {
@@ -101,15 +102,16 @@ struct ProgressCalculator {
             : effectiveCopyRate * assumedVerifyToCopyRatio
         let effectiveQuickRate = quickVerifyRate.hasEstimate ? quickVerifyRate.rate : fallbackQuickVerifyRate
 
-        // Total cost of each phase, expressed in seconds.
-        let copyCost = Double(counters.totalBytes) / effectiveCopyRate
+        // Total cost of each phase, expressed in seconds. A verify-only run has no copy phase,
+        // so charging it for one would peg the bar near zero for the whole job.
+        let copyCost = mode.writesToDestination ? Double(counters.totalBytes) / effectiveCopyRate : 0
         let verifyCost: Double = switch verification {
         case .none: 0
         case .quick: Double(counters.totalFiles) / effectiveQuickRate
         case .checksum: Double(counters.totalBytes) / effectiveVerifyRate
         }
 
-        let copyDone = Double(counters.processedBytes) / effectiveCopyRate
+        let copyDone = mode.writesToDestination ? Double(counters.processedBytes) / effectiveCopyRate : 0
         let verifyDone: Double = switch verification {
         case .none: 0
         case .quick: Double(counters.verifiedFiles) / effectiveQuickRate
@@ -139,6 +141,7 @@ struct ProgressCalculator {
 
         progress.eta = estimateRemaining(counters: counters,
                                          verification: verification,
+                                         mode: mode,
                                          copyBytesPerSecond: effectiveCopyRate,
                                          verifyBytesPerSecond: effectiveVerifyRate,
                                          quickFilesPerSecond: effectiveQuickRate)
@@ -147,6 +150,7 @@ struct ProgressCalculator {
 
     private mutating func estimateRemaining(counters: TransferCounters,
                                             verification: VerificationMode,
+                                            mode: TransferMode,
                                             copyBytesPerSecond: Double,
                                             verifyBytesPerSecond: Double,
                                             quickFilesPerSecond: Double) -> TimeInterval? {
@@ -163,7 +167,9 @@ struct ProgressCalculator {
         // Nothing measured yet — don't show a wildly wrong first guess.
         guard copyRate.hasEstimate || counters.phase == .verifying else { return nil }
 
-        let remainingCopyBytes = max(0, counters.totalBytes - counters.processedBytes)
+        let remainingCopyBytes = mode.writesToDestination
+            ? max(0, counters.totalBytes - counters.processedBytes)
+            : 0
         let remainingCopy = Double(remainingCopyBytes) / max(copyBytesPerSecond, 1)
 
         let remainingVerify: Double = switch verification {

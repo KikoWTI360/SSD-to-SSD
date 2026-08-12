@@ -29,6 +29,7 @@ DYNAMIC_PREFIXES = (
     "verify.",
     "outcome.",
     "issue.",
+    "mode.",
 )
 
 KEY_CALL = re.compile(r'\bL\(\s*"([^"\\]+)"')

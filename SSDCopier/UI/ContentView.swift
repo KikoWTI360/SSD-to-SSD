@@ -145,6 +145,14 @@ struct ContentView: View {
                 Button(L("action.cancel"), role: .destructive) {
                     controller.cancel()
                 }
+            } else {
+                Button {
+                    controller.requestStart(mode: .verifyOnly)
+                } label: {
+                    Label(L("action.verifyOnly"), systemImage: "checkmark.shield")
+                }
+                .help(L("action.verifyOnly.help"))
+                .disabled(!controller.canStart)
             }
 
             Button {
@@ -172,6 +180,10 @@ struct ContentView: View {
             }
         } else if controller.source == nil || controller.destination == nil {
             Text(L("status.selectDisks"))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        } else if controller.report?.mode == .verifyOnly {
+            Text(L("status.readyVerify", controller.options.verification.title.lowercased()))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         } else {

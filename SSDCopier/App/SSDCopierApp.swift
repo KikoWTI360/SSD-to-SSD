@@ -21,6 +21,12 @@ struct SSDCopierApp: App {
                     .keyboardShortcut(.return, modifiers: .command)
                     .disabled(!controller.canStart)
 
+                Button(L("action.verifyOnly")) { controller.requestStart(mode: .verifyOnly) }
+                    .keyboardShortcut(.return, modifiers: [.command, .shift])
+                    .disabled(!controller.canStart)
+
+                Divider()
+
                 Button(L("action.refreshDisks")) { controller.refreshVolumes() }
                     .keyboardShortcut("r", modifiers: .command)
             }
